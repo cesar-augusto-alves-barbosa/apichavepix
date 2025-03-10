@@ -1,5 +1,6 @@
 package io.github.cesar_augusto_alves_barbosa.apichavepix.entity;
 
+import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.StatusChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.TipoChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.TipoConta;
 import jakarta.persistence.*;
@@ -52,4 +53,14 @@ public class PixChave {
 
     @Column(nullable = true)
     private LocalDateTime dataInativacao;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    private StatusChave status = StatusChave.ATIVA; // Padrão ao criar uma nova chave
+
+    // Método para inativar a chave
+    public void inativarChave() {
+        this.status = StatusChave.INATIVA;
+        this.dataInativacao = LocalDateTime.now();
+    }
 }
