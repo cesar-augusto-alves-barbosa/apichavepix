@@ -1,17 +1,10 @@
 package io.github.cesar_augusto_alves_barbosa.apichavepix.dto;
 
-import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.StatusChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.TipoChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.TipoConta;
 import jakarta.validation.constraints.*;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
-public record PixChaveDTO(
-        @NotNull(message = "O ID da chave PIX não pode ser nulo")
-        UUID id,
-
+public record PixChaveCriacaoDTO(
         @NotNull(message = "O tipo da chave é obrigatório")
         TipoChave tipoChave,
 
@@ -34,14 +27,6 @@ public record PixChaveDTO(
         @Size(max = 30, message = "O nome do correntista deve ter no máximo 30 caracteres")
         String nomeCorrentista,
 
-        @Size(max = 45, message = "O sobrenome do correntista deve ter no máximo 45 caracteres")
-        String sobrenomeCorrentista,
-
-        @NotNull(message = "O status da chave é obrigatório")
-        StatusChave status,
-
-        @NotNull(message = "A data de criação é obrigatória")
-        LocalDateTime dataCriacao,
-
-        LocalDateTime dataInativacao
+        @Size(max = 45, message = "O sobrenome deve ter no máximo 45 caracteres")
+        String sobrenomeCorrentista
 ) { }
