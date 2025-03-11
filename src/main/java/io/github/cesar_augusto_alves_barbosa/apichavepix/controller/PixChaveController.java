@@ -1,5 +1,6 @@
 package io.github.cesar_augusto_alves_barbosa.apichavepix.controller;
 
+import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveAlteracaoDTO;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveCriacaoDTO;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveDTO;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ChavePixInvalidaException;
@@ -26,6 +27,13 @@ public class PixChaveController {
     public ResponseEntity<UUID> cadastrar(@Valid @RequestBody PixChaveCriacaoDTO dto) {
         UUID chaveId = pixChaveService.cadastrarChave(dto);
         return ResponseEntity.status(HttpStatus.OK).body(chaveId);
+    }
+
+
+    @PutMapping
+    public ResponseEntity<PixChaveDTO> alterar(@Valid @RequestBody PixChaveAlteracaoDTO dto) {
+        PixChaveDTO chaveAlterada = pixChaveService.alterarChave(dto);
+        return ResponseEntity.ok(chaveAlterada);
     }
 
 }

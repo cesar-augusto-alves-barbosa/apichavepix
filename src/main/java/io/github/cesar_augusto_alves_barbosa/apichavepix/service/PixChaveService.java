@@ -1,8 +1,10 @@
 package io.github.cesar_augusto_alves_barbosa.apichavepix.service;
 
+import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveAlteracaoDTO;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveCriacaoDTO;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveDTO;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.entity.PixChave;
+import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.StatusChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.TipoChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ChavePixInvalidaException;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ChavePixJaCadastradaException;
@@ -99,5 +101,26 @@ public class PixChaveService {
         if (chave.length() > 36) {
             throw new ChavePixInvalidaException("Chave aleatória inválida. Deve conter no máximo 36 caracteres.");
         }
+    }
+
+
+    @Transactional
+    public PixChaveDTO alterarChave(PixChaveAlteracaoDTO dto) {
+        PixChave chave = pixChaveRepository.findById(dto.id())
+                .orElseThrow(() -> new RuntimeException("Chave PIX não encontrada"));
+
+        if (chave.getStatus() == StatusChave.INATIVA) {
+            throw new RuntimeException("Não é permitido alterar chaves inativadas.");
+        }
+
+        chave.setTipoConta(dto.tipoConta());
+        chave.setNumeroAgencia(dto.numeroAgencia());
+        chave.setNumeroConta(dto.numeroConta());
+        chave.setNomeCorrentista(dto.nomeCorrentista());
+        chave.setSobrenomeCorrentista(dto.sobrenomeCorrentista());
+
+        PixChave chaveSalva = pixChaveRepository.save(chave);
+
+        return PixChaveAdapter.toDTO(chaveSalva);
     }
 }
