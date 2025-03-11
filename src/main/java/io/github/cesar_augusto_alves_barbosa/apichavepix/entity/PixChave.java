@@ -15,11 +15,12 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class PixChave {
 
     @Id
     @GeneratedValue
-    private UUID id = UUID.randomUUID();
+    private UUID id;
 
     @NotNull(message = "O tipo da chave é obrigatório")
     @Enumerated(EnumType.STRING)
@@ -45,10 +46,11 @@ public class PixChave {
     @Size(max = 30, message = "O nome do correntista deve ter no máximo 30 caracteres")
     private String nomeCorrentista;
 
-    @Size(max = 45, message = "O sobrenome deve ter no máximo 45 caracteres")
+    @Size(max = 45, message = "O sobrenome do correntista deve ter no máximo 45 caracteres")
     private String sobrenomeCorrentista;
 
     @Column(nullable = false, updatable = false)
+    @Builder.Default
     private LocalDateTime dataCriacao = LocalDateTime.now();
 
     @Column(nullable = true)
@@ -56,9 +58,9 @@ public class PixChave {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    private StatusChave status = StatusChave.ATIVA; // Padrão ao criar uma nova chave
+    @Builder.Default
+    private StatusChave status = StatusChave.ATIVA;
 
-    // Método para inativar a chave
     public void inativarChave() {
         this.status = StatusChave.INATIVA;
         this.dataInativacao = LocalDateTime.now();
