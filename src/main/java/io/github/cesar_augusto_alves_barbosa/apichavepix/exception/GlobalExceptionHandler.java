@@ -1,19 +1,66 @@
 package io.github.cesar_augusto_alves_barbosa.apichavepix.exception;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.ErroResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ControllerAdvice;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErroResponseDTO> handleInvalidEnumException(HttpMessageNotReadableException ex) {
+        List<Map<String, String>> mensagens = new ArrayList<>();
+        Map<String, String> erro = new HashMap<>();
+
+        if (ex.getCause() instanceof InvalidFormatException invalidFormatException) {
+            erro.put("campo", invalidFormatException.getPath().get(0).getFieldName());
+            erro.put("mensagem", "Valor inválido '" + invalidFormatException.getValue() +
+                    "'. Os valores permitidos são: " + Arrays.toString(invalidFormatException.getTargetType().getEnumConstants()));
+            mensagens.add(erro);
+
+            ErroResponseDTO response = ErroResponseDTO.builder()
+                    .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                    .erro("Erro de validação")
+                    .mensagens(mensagens)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
+        }
+
+
+        if (ex.getMessage().contains("Required request body is missing")) {
+            erro.put("mensagem", "O corpo da requisição (body) é obrigatório.");
+            mensagens.add(erro);
+
+            ErroResponseDTO response = ErroResponseDTO.builder()
+                    .status(HttpStatus.BAD_REQUEST.value())
+                    .erro("Erro de leitura do JSON")
+                    .mensagens(mensagens)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        erro.put("mensagem", "Erro ao processar a requisição.");
+        mensagens.add(erro);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                ErroResponseDTO.builder()
+                        .status(HttpStatus.BAD_REQUEST.value())
+                        .erro("Erro de leitura do JSON")
+                        .mensagens(mensagens)
+                        .build()
+        );
+    }
 
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
