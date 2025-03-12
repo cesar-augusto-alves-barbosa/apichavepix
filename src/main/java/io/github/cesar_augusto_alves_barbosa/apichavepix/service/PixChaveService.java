@@ -1,12 +1,15 @@
 package io.github.cesar_augusto_alves_barbosa.apichavepix.service;
 
+import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveAlteracaoDTO;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveCriacaoDTO;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveDTO;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.entity.PixChave;
+import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.StatusChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.TipoChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ChavePixInvalidaException;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ChavePixJaCadastradaException;
-import io.github.cesar_augusto_alves_barbosa.apichavepix.adapter.PixChaveAdapter;
+import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ChavePixNaoEncontradaException;
+import io.github.cesar_augusto_alves_barbosa.apichavepix.mapper.PixChaveMapper;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.LimiteChavesPixAtingidoException;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.repository.PixChaveRepository;
 import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
@@ -40,13 +43,9 @@ public class PixChaveService {
             throw new LimiteChavesPixAtingidoException("Limite máximo de chaves PIX atingido para essa conta.");
         }
 
-        if (dto.tipoConta() == null) {
-            throw new ChavePixInvalidaException("O tipo da conta é obrigatório.");
-        }
-
         validarRegrasDeCadastro(dto);
 
-        PixChave novaChave = PixChaveAdapter.criarChavePixToEntity(dto);
+        PixChave novaChave = PixChaveMapper.criarChavePixToEntity(dto);
         PixChave chaveSalva = pixChaveRepository.save(novaChave);
 
         return chaveSalva.getId();
@@ -99,5 +98,26 @@ public class PixChaveService {
         if (chave.length() > 36) {
             throw new ChavePixInvalidaException("Chave aleatória inválida. Deve conter no máximo 36 caracteres.");
         }
+    }
+
+
+    @Transactional
+    public PixChaveDTO alterarChave(PixChaveAlteracaoDTO dto) {
+        PixChave chave = pixChaveRepository.findById(dto.id())
+                .orElseThrow(() -> new ChavePixNaoEncontradaException("Chave PIX não encontrada com id " + dto.id()));
+
+        if (chave.getStatus() == StatusChave.INATIVA) {
+            throw new RuntimeException("Não é permitido alterar chaves inativadas.");
+        }
+
+        chave.setTipoConta(dto.tipoConta());
+        chave.setNumeroAgencia(dto.numeroAgencia());
+        chave.setNumeroConta(dto.numeroConta());
+        chave.setNomeCorrentista(dto.nomeCorrentista());
+        chave.setSobrenomeCorrentista(dto.sobrenomeCorrentista());
+
+        PixChave chaveSalva = pixChaveRepository.save(chave);
+
+            return PixChaveMapper.toDTO(chaveSalva);
     }
 }

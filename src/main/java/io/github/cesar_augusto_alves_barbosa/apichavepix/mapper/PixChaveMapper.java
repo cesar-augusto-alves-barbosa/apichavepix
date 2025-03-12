@@ -1,4 +1,4 @@
-package io.github.cesar_augusto_alves_barbosa.apichavepix.adapter;
+package io.github.cesar_augusto_alves_barbosa.apichavepix.mapper;
 
 import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveCriacaoDTO;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveDTO;
@@ -7,7 +7,7 @@ import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.StatusChave;
 
 import java.time.LocalDateTime;
 
-public class PixChaveAdapter {
+public class PixChaveMapper {
 
     public static PixChave criarChavePixToEntity(PixChaveCriacaoDTO dto) {
         return PixChave.builder()

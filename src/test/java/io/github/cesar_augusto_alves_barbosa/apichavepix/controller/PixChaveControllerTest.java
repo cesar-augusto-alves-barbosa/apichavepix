@@ -11,31 +11,42 @@ import io.github.cesar_augusto_alves_barbosa.apichavepix.service.PixChaveService
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(SpringExtension.class)
 class PixChaveControllerTest {
 
-    @Mock
-    private PixChaveService pixChaveService;
+    @Autowired
+    private WebApplicationContext context;
 
-    @InjectMocks
-    private PixChaveController pixChaveController;
+    private MockMvc mockMvc;
+
+    @MockitoBean
+    private PixChaveService pixChaveService;
 
     private PixChaveCriacaoDTO dto;
     private PixChaveDTO pixChaveDTO;
 
     @BeforeEach
     void setup() {
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(this.context).build();
+
         dto = new PixChaveCriacaoDTO(
                 TipoChave.CPF,
                 "12345678901",
@@ -62,57 +73,36 @@ class PixChaveControllerTest {
     }
 
     @Test
-    void deveRetornar201QuandoCadastrarComSucesso() {
-        when(pixChaveService.cadastrarChave(dto)).thenReturn(pixChaveDTO);
+    void deveRetornar201QuandoCadastrarComSucesso() throws Exception {
+        when(pixChaveService.cadastrarChave(any(PixChaveCriacaoDTO.class))).thenReturn(pixChaveDTO.id());
 
-        ResponseEntity<PixChaveDTO> resposta = pixChaveController.cadastrar(dto);
+        mockMvc.perform(post("/api/pix")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(dto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(pixChaveDTO.id().toString()));
+    }
 
-        assertEquals(201, resposta.getStatusCodeValue());
+
+    @Test
+    void deveRetornar422QuandoChaveJaExiste() throws Exception {
+        when(pixChaveService.cadastrarChave(any(PixChaveCriacaoDTO.class)))
+                .thenThrow(new ChavePixJaCadastradaException("Chave PIX já cadastrada para outro correntista."));
+
+        mockMvc.perform(post("/api/pix")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(dto)))
+                .andExpect(status().isUnprocessableEntity());
     }
 
     @Test
-    void deveRetornar409QuandoChaveJaExiste() {
-        when(pixChaveService.cadastrarChave(dto)).thenThrow(new ChavePixJaCadastradaException("Chave PIX já cadastrada"));
+    void deveRetornar422QuandoChaveInvalida() throws Exception {
+        when(pixChaveService.cadastrarChave(any(PixChaveCriacaoDTO.class)))
+                .thenThrow(new ChavePixInvalidaException("Dados inválidos para cadastro da chave PIX."));
 
-        ResponseEntity<String> resposta = pixChaveController.handleChaveJaCadastrada(
-                new ChavePixJaCadastradaException("Chave PIX já cadastrada")
-        );
-
-        assertEquals(409, resposta.getStatusCodeValue());
-    }
-
-    @Test
-    void deveRetornar422QuandoChaveInvalida() {
-        when(pixChaveService.cadastrarChave(dto)).thenThrow(new ChavePixInvalidaException("CPF inválido"));
-
-        ResponseEntity<String> resposta = pixChaveController.handleChaveInvalida(
-                new ChavePixInvalidaException("CPF inválido")
-        );
-
-        assertEquals(422, resposta.getStatusCodeValue());
-    }
-
-    @Test
-    void deveLancarExcecaoChavePixJaCadastrada() {
-        when(pixChaveService.cadastrarChave(dto)).thenThrow(new ChavePixJaCadastradaException("Chave PIX já cadastrada"));
-
-        Exception exception = assertThrows(ChavePixJaCadastradaException.class, () -> pixChaveController.cadastrar(dto));
-
-        assertEquals("Chave PIX já cadastrada", exception.getMessage());
-        verify(pixChaveService, times(1)).cadastrarChave(dto);
-    }
-
-    @Test
-    void deveCadastrarChavePixComSucesso() {
-        when(pixChaveService.cadastrarChave(dto)).thenReturn(pixChaveDTO);
-
-        ResponseEntity<PixChaveDTO> resposta = pixChaveController.cadastrar(dto);
-
-        assertNotNull(resposta);
-        assertEquals(200, resposta.getStatusCodeValue());
-        assertNotNull(resposta.getBody());
-        assertEquals(dto.valorChave(), resposta.getBody().valorChave());
-
-        verify(pixChaveService, times(1)).cadastrarChave(dto);
+        mockMvc.perform(post("/api/pix")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(dto)))
+                .andExpect(status().isUnprocessableEntity());
     }
 }
