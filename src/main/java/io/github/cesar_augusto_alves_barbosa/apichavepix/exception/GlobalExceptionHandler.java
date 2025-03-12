@@ -36,6 +36,7 @@ public class GlobalExceptionHandler {
         List<Map<String, String>> mensagens = new ArrayList<>();
         Map<String, String> erro = new HashMap<>();
 
+        // Tratamento para valores inválidos de tipos esperados (ex: UUID inválido, enum inválido)
         if (ex.getCause() instanceof InvalidFormatException invalidFormatException) {
             erro.put("campo", invalidFormatException.getPath().get(0).getFieldName());
             erro.put("mensagem", "Valor inválido '" + invalidFormatException.getValue() +
@@ -51,13 +52,13 @@ public class GlobalExceptionHandler {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
         }
 
-
+        // Tratamento para corpo da requisição ausente
         if (ex.getMessage().contains("Required request body is missing")) {
             erro.put("mensagem", "O corpo da requisição (body) é obrigatório.");
             mensagens.add(erro);
 
             ErroResponseDTO response = ErroResponseDTO.builder()
-                    .status(HttpStatus.BAD_REQUEST.value())
+                    .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
                     .erro("Erro de leitura do JSON")
                     .mensagens(mensagens)
                     .build();
@@ -65,17 +66,33 @@ public class GlobalExceptionHandler {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
+        // Tratamento para JSON mal formatado (quando o Spring não consegue interpretar o JSON)
+        if (ex.getMessage().contains("Cannot deserialize value of type")) {
+            erro.put("mensagem", "O formato do JSON enviado está incorreto.");
+            mensagens.add(erro);
+
+            ErroResponseDTO response = ErroResponseDTO.builder()
+                    .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                    .erro("Erro de leitura do JSON")
+                    .mensagens(mensagens)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
+        }
+
+        // Caso nenhum dos erros acima seja identificado, retorna um erro genérico
         erro.put("mensagem", "Erro ao processar a requisição.");
         mensagens.add(erro);
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(
                 ErroResponseDTO.builder()
-                        .status(HttpStatus.BAD_REQUEST.value())
+                        .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .erro("Erro de leitura do JSON")
                         .mensagens(mensagens)
                         .build()
         );
     }
+
 
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
