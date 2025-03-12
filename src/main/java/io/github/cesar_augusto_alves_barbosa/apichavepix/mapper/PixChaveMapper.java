@@ -1,6 +1,6 @@
 package io.github.cesar_augusto_alves_barbosa.apichavepix.mapper;
 
-import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveConsultaDTO;
+import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveConsultaRespostaDTO;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveCriacaoDTO;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveDTO;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveFiltroDTO;
@@ -57,8 +57,8 @@ public class PixChaveMapper {
         );
     }
 
-    public static PixChaveConsultaDTO toConsultaDTO(PixChave pixChave) {
-        return PixChaveConsultaDTO.builder()
+    public static PixChaveConsultaRespostaDTO toConsultaDTO(PixChave pixChave) {
+        return PixChaveConsultaRespostaDTO.builder()
                 .id(pixChave.getId())
                 .tipoChave(pixChave.getTipoChave() != null ? pixChave.getTipoChave().name() : "")
                 .valorChave(pixChave.getValorChave() != null ? pixChave.getValorChave() : "")
