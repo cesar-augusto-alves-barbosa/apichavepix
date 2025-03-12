@@ -11,7 +11,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PixChaveConsultaDTO {
+public class PixChaveConsultaRespostaDTO {
 
     private UUID id;
     private String tipoChave;

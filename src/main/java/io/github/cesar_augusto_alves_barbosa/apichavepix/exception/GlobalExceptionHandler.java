@@ -47,9 +47,9 @@ public class GlobalExceptionHandler {
 
         mensagens.add(erro);
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(
                 ErroResponseDTO.builder()
-                        .status(HttpStatus.BAD_REQUEST.value())
+                        .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
                         .erro("Erro de conversão")
                         .mensagens(mensagens)
                         .build()

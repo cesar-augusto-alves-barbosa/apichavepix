@@ -4,8 +4,6 @@ import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.*;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ConsultaInvalidaException;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.service.PixChaveService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,11 +23,10 @@ public class PixChaveController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PixChaveConsultaDTO> consultarPorId(
+    public ResponseEntity<PixChaveConsultaRespostaDTO> consultarPorId(
             @PathVariable UUID id,
             @RequestParam(required = false) Map<String, String> allRequestParams) {
 
-        // ❌ Se houver outros filtros além do ID, lança exceção
         if (!allRequestParams.isEmpty()) {
             throw new ConsultaInvalidaException("Se o ID for informado, nenhum outro filtro pode ser utilizado.");
         }
@@ -39,8 +36,8 @@ public class PixChaveController {
 
     // ✅ Consulta por múltiplos filtros
     @GetMapping
-    public ResponseEntity<List<PixChaveConsultaDTO>> consultarPorFiltros(PixChaveFiltroDTO filtroDTO) {
-        List<PixChaveConsultaDTO> chaves = pixChaveService.consultarPorFiltros(filtroDTO);
+    public ResponseEntity<List<PixChaveConsultaRespostaDTO>> consultarPorFiltros(PixChaveFiltroDTO filtroDTO) {
+        List<PixChaveConsultaRespostaDTO> chaves = pixChaveService.consultarPorFiltros(filtroDTO);
         return chaves.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(chaves);
     }
 
@@ -54,6 +51,12 @@ public class PixChaveController {
     public ResponseEntity<PixChaveDTO> alterar(@Valid @RequestBody PixChaveAlteracaoDTO dto) {
         PixChaveDTO chaveAlterada = pixChaveService.alterarChave(dto);
         return ResponseEntity.ok(chaveAlterada);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<PixChaveDTO> inativarChave(@PathVariable UUID id) {
+        PixChaveDTO chaveInativada = pixChaveService.inativarChave(id);
+        return ResponseEntity.ok(chaveInativada);
     }
 
 }

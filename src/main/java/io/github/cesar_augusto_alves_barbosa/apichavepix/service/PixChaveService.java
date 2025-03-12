@@ -10,7 +10,6 @@ import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ChavePixNaoEn
 import io.github.cesar_augusto_alves_barbosa.apichavepix.mapper.PixChaveMapper;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.LimiteChavesPixAtingidoException;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.repository.PixChaveRepository;
-import io.github.cesar_augusto_alves_barbosa.apichavepix.utils.DateUtils;
 import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
 import org.hibernate.validator.internal.constraintvalidators.hv.br.CNPJValidator;
 import org.hibernate.validator.internal.constraintvalidators.hv.br.CPFValidator;
@@ -19,15 +18,11 @@ import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import static org.hibernate.validator.internal.engine.messageinterpolation.el.RootResolver.FORMATTER;
 
 @Service
 public class PixChaveService {
@@ -38,14 +33,14 @@ public class PixChaveService {
         this.pixChaveRepository = pixChaveRepository;
     }
     // ✅ Consulta por ID (única chave PIX)
-    public PixChaveConsultaDTO consultarPorId(UUID id) {
+    public PixChaveConsultaRespostaDTO consultarPorId(UUID id) {
         return pixChaveRepository.findById(id)
                 .map(PixChaveMapper::toConsultaDTO)
                 .orElseThrow(() -> new IllegalArgumentException("Chave PIX não encontrada."));
     }
 
     // ✅ Consulta usando múltiplos filtros com Example
-    public List<PixChaveConsultaDTO> consultarPorFiltros(PixChaveFiltroDTO filtroDTO) {
+    public List<PixChaveConsultaRespostaDTO> consultarPorFiltros(PixChaveFiltroDTO filtroDTO) {
         PixChave filtro = PixChaveMapper.toEntity(filtroDTO);
         Example<PixChave> example = Example.of(filtro, ExampleMatcher.matchingAll()
                         .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING)
@@ -147,5 +142,21 @@ public class PixChaveService {
         PixChave chaveSalva = pixChaveRepository.save(chave);
 
             return PixChaveMapper.toDTO(chaveSalva);
+    }
+
+    @Transactional
+    public PixChaveDTO inativarChave(UUID id) {
+        PixChave chave = pixChaveRepository.findById(id)
+                .orElseThrow(() -> new ChavePixNaoEncontradaException("Chave PIX não encontrada com ID: " + id));
+
+        if (chave.getStatus() == StatusChave.INATIVA) {
+            throw new ChavePixInvalidaException("A chave PIX já foi desativada.");
+        }
+
+        chave.setStatus(StatusChave.INATIVA);
+        chave.setDataInativacao(LocalDateTime.now());
+
+        PixChave chaveSalva = pixChaveRepository.save(chave);
+        return PixChaveMapper.toDTO(chaveSalva);
     }
 }
