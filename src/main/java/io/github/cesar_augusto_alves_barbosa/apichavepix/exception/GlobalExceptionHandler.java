@@ -9,11 +9,90 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.*;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ConsultaInvalidaException.class)
+    public ResponseEntity<ErroResponseDTO> handleConsultaInvalida(ConsultaInvalidaException ex) {
+        List<Map<String, String>> mensagens = new ArrayList<>();
+        Map<String, String> erro = new HashMap<>();
+        erro.put("mensagem", ex.getMessage());
+        mensagens.add(erro);
+
+        ErroResponseDTO response = ErroResponseDTO.builder()
+                .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                .erro("Erro de consulta")
+                .mensagens(mensagens)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErroResponseDTO> handleTypeMismatchException(MethodArgumentTypeMismatchException ex) {
+        List<Map<String, String>> mensagens = new ArrayList<>();
+        Map<String, String> erro = new HashMap<>();
+
+        if (ex.getRequiredType() == UUID.class) {
+            erro.put("campo", ex.getName());
+            erro.put("mensagem", "Formato de UUID inválido. Informe um UUID válido, como '95e4cd5e-7a0c-49a3-8925-2eac961495ef'.");
+        } else {
+            erro.put("campo", ex.getName());
+            erro.put("mensagem", "Tipo de dado inválido. Esperado: " + ex.getRequiredType().getSimpleName());
+        }
+
+        mensagens.add(erro);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                ErroResponseDTO.builder()
+                        .status(HttpStatus.BAD_REQUEST.value())
+                        .erro("Erro de conversão")
+                        .mensagens(mensagens)
+                        .build()
+        );
+    }
+
+    // ✅ Tratamento para valores inválidos de Enum (ex: TipoChave inválido)
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErroResponseDTO> handleIllegalArgumentException(IllegalArgumentException ex) {
+        List<Map<String, String>> mensagens = new ArrayList<>();
+        Map<String, String> erro = new HashMap<>();
+
+        erro.put("mensagem", "Valor inválido informado. Verifique os valores permitidos para este campo.");
+        mensagens.add(erro);
+
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(
+                ErroResponseDTO.builder()
+                        .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .erro("Erro de validação")
+                        .mensagens(mensagens)
+                        .build()
+        );
+    }
+
+    // ✅ Tratamento para erros no JSON (ex: Enum inválido na requisição)
+    @ExceptionHandler(InvalidFormatException.class)
+    public ResponseEntity<ErroResponseDTO> handleInvalidFormatException(InvalidFormatException ex) {
+        List<Map<String, String>> mensagens = new ArrayList<>();
+        Map<String, String> erro = new HashMap<>();
+
+        erro.put("campo", ex.getPath().get(0).getFieldName());
+        erro.put("mensagem", "Valor inválido '" + ex.getValue() +
+                "'. Os valores permitidos são: " + Arrays.toString(ex.getTargetType().getEnumConstants()));
+        mensagens.add(erro);
+
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(
+                ErroResponseDTO.builder()
+                        .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                        .erro("Erro de validação")
+                        .mensagens(mensagens)
+                        .build()
+        );
+    }
 
     @ExceptionHandler(ChavePixNaoEncontradaException.class)
     public ResponseEntity<ErroResponseDTO> handleChavePixNaoEncontradaExceptionException(ChavePixNaoEncontradaException ex) {

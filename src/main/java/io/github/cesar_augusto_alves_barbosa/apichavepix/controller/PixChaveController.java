@@ -1,6 +1,7 @@
 package io.github.cesar_augusto_alves_barbosa.apichavepix.controller;
 
 import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.*;
+import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ConsultaInvalidaException;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.service.PixChaveService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -22,9 +24,16 @@ public class PixChaveController {
         this.pixChaveService = pixChaveService;
     }
 
-    // ✅ Consulta por ID
     @GetMapping("/{id}")
-    public ResponseEntity<PixChaveConsultaDTO> consultarPorId(@PathVariable UUID id) {
+    public ResponseEntity<PixChaveConsultaDTO> consultarPorId(
+            @PathVariable UUID id,
+            @RequestParam(required = false) Map<String, String> allRequestParams) {
+
+        // ❌ Se houver outros filtros além do ID, lança exceção
+        if (!allRequestParams.isEmpty()) {
+            throw new ConsultaInvalidaException("Se o ID for informado, nenhum outro filtro pode ser utilizado.");
+        }
+
         return ResponseEntity.ok(pixChaveService.consultarPorId(id));
     }
 
