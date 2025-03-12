@@ -15,9 +15,24 @@ import java.util.*;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(ChavePixNaoEncontradaException.class)
+    public ResponseEntity<ErroResponseDTO> handleChavePixNaoEncontradaExceptionException(ChavePixNaoEncontradaException ex) {
+        List<Map<String, String>> mensagens = new ArrayList<>();
+        Map<String, String> erro = new HashMap<>();
 
+        erro.put("mensagem", ex.getMessage());
+        mensagens.add(erro);
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                ErroResponseDTO.builder()
+                        .status(HttpStatus.NOT_FOUND.value())
+                        .erro("ChavePixNaoEncontrada")
+                        .mensagens(mensagens)
+                        .build()
+        );
+    }
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErroResponseDTO> handleInvalidEnumException(HttpMessageNotReadableException ex) {
+    public ResponseEntity<ErroResponseDTO> handleInvalidParametersException(HttpMessageNotReadableException ex) {
         List<Map<String, String>> mensagens = new ArrayList<>();
         Map<String, String> erro = new HashMap<>();
 

@@ -8,7 +8,8 @@ import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.StatusChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.TipoChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ChavePixInvalidaException;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ChavePixJaCadastradaException;
-import io.github.cesar_augusto_alves_barbosa.apichavepix.adapter.PixChaveAdapter;
+import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ChavePixNaoEncontradaException;
+import io.github.cesar_augusto_alves_barbosa.apichavepix.mapper.PixChaveMapper;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.LimiteChavesPixAtingidoException;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.repository.PixChaveRepository;
 import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
@@ -42,13 +43,9 @@ public class PixChaveService {
             throw new LimiteChavesPixAtingidoException("Limite máximo de chaves PIX atingido para essa conta.");
         }
 
-        if (dto.tipoConta() == null) {
-            throw new ChavePixInvalidaException("O tipo da conta é obrigatório.");
-        }
-
         validarRegrasDeCadastro(dto);
 
-        PixChave novaChave = PixChaveAdapter.criarChavePixToEntity(dto);
+        PixChave novaChave = PixChaveMapper.criarChavePixToEntity(dto);
         PixChave chaveSalva = pixChaveRepository.save(novaChave);
 
         return chaveSalva.getId();
@@ -107,7 +104,7 @@ public class PixChaveService {
     @Transactional
     public PixChaveDTO alterarChave(PixChaveAlteracaoDTO dto) {
         PixChave chave = pixChaveRepository.findById(dto.id())
-                .orElseThrow(() -> new RuntimeException("Chave PIX não encontrada"));
+                .orElseThrow(() -> new ChavePixNaoEncontradaException("Chave PIX não encontrada com id " + dto.id()));
 
         if (chave.getStatus() == StatusChave.INATIVA) {
             throw new RuntimeException("Não é permitido alterar chaves inativadas.");
@@ -121,6 +118,6 @@ public class PixChaveService {
 
         PixChave chaveSalva = pixChaveRepository.save(chave);
 
-        return PixChaveAdapter.toDTO(chaveSalva);
+            return PixChaveMapper.toDTO(chaveSalva);
     }
 }

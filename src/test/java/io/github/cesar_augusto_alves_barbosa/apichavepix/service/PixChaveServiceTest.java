@@ -1,5 +1,6 @@
 package io.github.cesar_augusto_alves_barbosa.apichavepix.service;
 
+import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveAlteracaoDTO;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveCriacaoDTO;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveDTO;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.entity.PixChave;
@@ -39,7 +40,7 @@ class PixChaveServiceTest {
     void setup() {
         dto = new PixChaveCriacaoDTO(
                 TipoChave.CPF,
-                "12345678901",
+                "87468543801",
                 TipoConta.CORRENTE,
                 1234,
                 56789012,
@@ -50,8 +51,9 @@ class PixChaveServiceTest {
 
     @Test
     void deveCadastrarChaveComSucesso() {
+        UUID chaveId = UUID.randomUUID();
         PixChave chaveCriada = PixChave.builder()
-                .id(UUID.randomUUID())
+                .id(chaveId)
                 .tipoChave(dto.tipoChave())
                 .valorChave(dto.valorChave())
                 .tipoConta(dto.tipoConta())
@@ -66,12 +68,10 @@ class PixChaveServiceTest {
         when(pixChaveRepository.findByValorChave(dto.valorChave())).thenReturn(Optional.empty());
         when(pixChaveRepository.save(any(PixChave.class))).thenReturn(chaveCriada);
 
-        PixChaveDTO chaveSalva = pixChaveService.cadastrarChave(dto);
+        UUID chaveIdRetornada = pixChaveService.cadastrarChave(dto);
 
-        assertNotNull(chaveSalva);
-        assertEquals(dto.valorChave(), chaveSalva.valorChave());
-        assertEquals(dto.tipoChave(), chaveSalva.tipoChave());
-        assertEquals(StatusChave.ATIVA, chaveSalva.status());
+        assertNotNull(chaveIdRetornada);
+        assertEquals(chaveCriada.getId(), chaveIdRetornada);
 
         verify(pixChaveRepository, times(1)).save(any(PixChave.class));
     }
@@ -112,7 +112,7 @@ class PixChaveServiceTest {
 
         Exception exception = assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.cadastrarChave(dto));
 
-        assertEquals("CPF inválido. Deve conter exatamente 11 dígitos numéricos.", exception.getMessage());
+        assertEquals("CPF inválido. Deve conter exatamente 11 dígitos numéricos e ser um CPF válido.", exception.getMessage());
         verify(pixChaveRepository, never()).save(any(PixChave.class));
     }
 
@@ -130,7 +130,7 @@ class PixChaveServiceTest {
 
         Exception exception = assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.cadastrarChave(dto));
 
-        assertEquals("E-mail inválido. Deve conter '@' e ter no máximo 77 caracteres.", exception.getMessage());
+        assertEquals("E-mail inválido. O formato correto deve conter '@' e seguir as regras de e-mail.", exception.getMessage());
         verify(pixChaveRepository, never()).save(any(PixChave.class));
     }
 
@@ -152,21 +152,71 @@ class PixChaveServiceTest {
         verify(pixChaveRepository, never()).save(any(PixChave.class));
     }
 
+
+
     @Test
-    void deveRejeitarContaComTipoInvalido() {
-        dto = new PixChaveCriacaoDTO(
-                TipoChave.EMAIL,
-                "teste@email.com",
-                null, // Tipo de conta inválido
+    void deveAlterarChaveComSucesso() {
+        UUID id = UUID.randomUUID();
+        PixChave chaveExistente = new PixChave();
+        chaveExistente.setId(id);
+        chaveExistente.setStatus(StatusChave.ATIVA);
+
+        PixChaveAlteracaoDTO dto = new PixChaveAlteracaoDTO(
+                id,
+                TipoConta.CORRENTE,
                 1234,
-                56789012,
-                "Fernanda Lima",
-                ""
+                12345678,
+                "João",
+                "Silva"
         );
 
-        Exception exception = assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.cadastrarChave(dto));
+        when(pixChaveRepository.findById(id)).thenReturn(Optional.of(chaveExistente));
+        when(pixChaveRepository.save(any(PixChave.class))).thenReturn(chaveExistente);
 
-        assertEquals("O tipo da conta é obrigatório.", exception.getMessage());
-        verify(pixChaveRepository, never()).save(any(PixChave.class));
+        PixChaveDTO resultado = pixChaveService.alterarChave(dto);
+
+        assertNotNull(resultado);
+        assertEquals(dto.tipoConta(), resultado.tipoConta());
+        verify(pixChaveRepository, times(1)).save(any(PixChave.class));
     }
+
+    @Test
+    void naoDevePermitirAlterarChaveInativa() {
+        PixChave chaveInativa = new PixChave();
+        chaveInativa.setStatus(StatusChave.INATIVA);
+
+        PixChaveAlteracaoDTO dto = new PixChaveAlteracaoDTO(
+                UUID.randomUUID(),
+                TipoConta.CORRENTE,
+                1234,
+                56789012,
+                "João Silva",
+                "Oliveira"
+        );
+
+        when(pixChaveRepository.findById(dto.id())).thenReturn(Optional.of(chaveInativa));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> pixChaveService.alterarChave(dto));
+        assertEquals("Não é permitido alterar chaves inativadas.", exception.getMessage());
+    }
+
+    @Test
+    void deveRetornarErroSeChaveNaoExistir() {
+        UUID idInexistente = UUID.randomUUID();
+        PixChaveAlteracaoDTO dto = new PixChaveAlteracaoDTO(
+                idInexistente,
+                TipoConta.CORRENTE,
+                1234,
+                56789012,
+                "João Silva",
+                "Oliveira"
+        );
+
+        when(pixChaveRepository.findById(idInexistente)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(RuntimeException.class, () -> pixChaveService.alterarChave(dto));
+        assertEquals("Chave PIX não encontrada", exception.getMessage());
+    }
+
+
 }

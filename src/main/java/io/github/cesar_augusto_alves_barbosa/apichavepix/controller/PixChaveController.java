@@ -3,8 +3,6 @@ package io.github.cesar_augusto_alves_barbosa.apichavepix.controller;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveAlteracaoDTO;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveCriacaoDTO;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveDTO;
-import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ChavePixInvalidaException;
-import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ChavePixJaCadastradaException;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.service.PixChaveService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
