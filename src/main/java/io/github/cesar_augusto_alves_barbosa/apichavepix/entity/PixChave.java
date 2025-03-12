@@ -24,18 +24,22 @@ public class PixChave {
 
     @NotNull(message = "O tipo da chave é obrigatório")
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private TipoChave tipoChave;
 
     @NotBlank(message = "O valor da chave não pode estar em branco")
     @Size(max = 77, message = "O valor da chave deve ter no máximo 77 caracteres")
+    @Column(nullable = false)
     private String valorChave;
 
     @NotNull(message = "O tipo da conta é obrigatório")
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private TipoConta tipoConta;
 
     @NotNull(message = "O número da agência é obrigatório")
     @Digits(integer = 4, fraction = 0, message = "A agência deve ter até 4 dígitos")
+    @Column(nullable = false)
     private Integer numeroAgencia;
 
     @NotNull(message = "O número da conta é obrigatório")
@@ -43,23 +47,23 @@ public class PixChave {
     private Integer numeroConta;
 
     @NotBlank(message = "O nome do correntista é obrigatório")
+    @Column(nullable = false)
     @Size(max = 30, message = "O nome do correntista deve ter no máximo 30 caracteres")
     private String nomeCorrentista;
 
     @Size(max = 45, message = "O sobrenome do correntista deve ter no máximo 45 caracteres")
+    @Column
     private String sobrenomeCorrentista;
 
     @Column(nullable = false, updatable = false)
-    @Builder.Default
-    private LocalDateTime dataCriacao = LocalDateTime.now();
+    private LocalDateTime dataCriacao;
 
     @Column(nullable = true)
     private LocalDateTime dataInativacao;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Builder.Default
-    private StatusChave status = StatusChave.ATIVA;
+    private StatusChave status;
 
     public void inativarChave() {
         this.status = StatusChave.INATIVA;
