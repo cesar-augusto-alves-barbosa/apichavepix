@@ -5,11 +5,8 @@ import io.github.cesar_augusto_alves_barbosa.apichavepix.entity.PixChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.StatusChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.TipoChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.TipoTitular;
-import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ChavePixInvalidaException;
-import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ChavePixJaCadastradaException;
-import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ChavePixNaoEncontradaException;
+import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.*;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.mapper.PixChaveMapper;
-import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.LimiteChavesPixAtingidoException;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.repository.PixChaveRepository;
 import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
 import org.hibernate.validator.internal.constraintvalidators.hv.br.CNPJValidator;
@@ -127,11 +124,16 @@ public class PixChaveService {
 
     @Transactional
     public PixChaveDTO alterarChave(PixChaveAlteracaoDTO dto) {
+        System.out.println("🚀 Entrou no método alterarChave() com DTO: " + dto);
+
         PixChave chave = pixChaveRepository.findById(dto.id())
                 .orElseThrow(() -> new ChavePixNaoEncontradaException("Chave PIX não encontrada com id " + dto.id()));
 
+        System.out.println("🔍 Chave encontrada: " + chave);
+
         if (chave.getStatus() == StatusChave.INATIVA) {
-            throw new RuntimeException("Não é permitido alterar chaves inativadas.");
+            System.out.println("⚠️ Tentativa de alteração de chave inativa: " + chave.getId());
+            throw new ChavePixInativadaException("Não é permitido alterar chaves inativadas.");
         }
 
         chave.setTipoConta(dto.tipoConta());

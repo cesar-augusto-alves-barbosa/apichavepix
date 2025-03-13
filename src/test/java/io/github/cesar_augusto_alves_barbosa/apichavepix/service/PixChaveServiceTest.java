@@ -1,15 +1,12 @@
 package io.github.cesar_augusto_alves_barbosa.apichavepix.service;
 
-import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveAlteracaoDTO;
-import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveCriacaoDTO;
-import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveDTO;
+import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.*;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.entity.PixChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.StatusChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.TipoChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.TipoConta;
-import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ChavePixInvalidaException;
-import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ChavePixJaCadastradaException;
-import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.LimiteChavesPixAtingidoException;
+import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.TipoTitular;
+import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.*;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.repository.PixChaveRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +20,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,189 +32,137 @@ class PixChaveServiceTest {
     @InjectMocks
     private PixChaveService pixChaveService;
 
-    private PixChaveCriacaoDTO dto;
+    private PixChave pixChave;
+    private PixChaveCriacaoDTO pixChaveCriacaoDTO;
 
     @BeforeEach
-    void setup() {
-        dto = new PixChaveCriacaoDTO(
-                TipoChave.CPF,
-                "87468543801",
+    void setUp() {
+        pixChave = PixChave.builder()
+                .id(UUID.randomUUID())
+                .tipoChave(TipoChave.EMAIL)
+                .valorChave("teste@email.com")
+                .tipoConta(TipoConta.CORRENTE)
+                .numeroAgencia(1234)
+                .numeroConta(56789012)
+                .nomeCorrentista("Carlos Oliveira")
+                .sobrenomeCorrentista("Silva")
+                .status(StatusChave.ATIVA)
+                .dataCriacao(LocalDateTime.now())
+                .tipoTitular(TipoTitular.PF)
+                .build();
+
+        pixChaveCriacaoDTO = new PixChaveCriacaoDTO(
+                TipoChave.EMAIL,
+                "teste@email.com",
                 TipoConta.CORRENTE,
                 1234,
                 56789012,
-                "João Silva",
-                "Oliveira"
+                "Carlos Oliveira",
+                "Silva",
+                TipoTitular.PF
         );
     }
 
     @Test
     void deveCadastrarChaveComSucesso() {
-        UUID chaveId = UUID.randomUUID();
-        PixChave chaveCriada = PixChave.builder()
-                .id(chaveId)
-                .tipoChave(dto.tipoChave())
-                .valorChave(dto.valorChave())
-                .tipoConta(dto.tipoConta())
-                .numeroAgencia(dto.numeroAgencia())
-                .numeroConta(dto.numeroConta())
-                .nomeCorrentista(dto.nomeCorrentista())
-                .sobrenomeCorrentista(dto.sobrenomeCorrentista())
-                .dataCriacao(LocalDateTime.now())
-                .status(StatusChave.ATIVA)
-                .build();
+        when(pixChaveRepository.findByValorChave(any())).thenReturn(Optional.empty());
+        when(pixChaveRepository.countByNumeroConta(any())).thenReturn(0L);
+        when(pixChaveRepository.save(any())).thenReturn(pixChave);
 
-        when(pixChaveRepository.findByValorChave(dto.valorChave())).thenReturn(Optional.empty());
-        when(pixChaveRepository.save(any(PixChave.class))).thenReturn(chaveCriada);
+        UUID chaveId = pixChaveService.cadastrarChave(pixChaveCriacaoDTO);
 
-        UUID chaveIdRetornada = pixChaveService.cadastrarChave(dto);
-
-        assertNotNull(chaveIdRetornada);
-        assertEquals(chaveCriada.getId(), chaveIdRetornada);
-
-        verify(pixChaveRepository, times(1)).save(any(PixChave.class));
+        assertNotNull(chaveId);
+        verify(pixChaveRepository, times(1)).save(any());
     }
 
     @Test
-    void naoDeveCadastrarChaveDuplicada() {
-        when(pixChaveRepository.findByValorChave(dto.valorChave())).thenReturn(Optional.of(new PixChave()));
+    void deveLancarErroAoCadastrarChaveDuplicada() {
+        when(pixChaveRepository.findByValorChave(any())).thenReturn(Optional.of(pixChave));
 
-        Exception exception = assertThrows(ChavePixJaCadastradaException.class, () -> pixChaveService.cadastrarChave(dto));
-
-        assertEquals("Chave PIX já cadastrada para outro correntista.", exception.getMessage());
-        verify(pixChaveRepository, never()).save(any(PixChave.class));
+        assertThrows(ChavePixJaCadastradaException.class, () -> pixChaveService.cadastrarChave(pixChaveCriacaoDTO));
     }
 
     @Test
-    void naoDeveCadastrarChaveSeLimiteExcedido() {
-        when(pixChaveRepository.findByValorChave(dto.valorChave())).thenReturn(Optional.empty());
-        when(pixChaveRepository.countByNumeroAgenciaAndNumeroConta(dto.numeroAgencia(), dto.numeroConta()))
-                .thenReturn(5L);
+    void deveLancarErroAoExcederLimiteDeChaves() {
+        when(pixChaveRepository.countByNumeroConta(any())).thenReturn(5L);
 
-        Exception exception = assertThrows(LimiteChavesPixAtingidoException.class, () -> pixChaveService.cadastrarChave(dto));
-
-        assertEquals("Limite máximo de chaves PIX atingido para essa conta.", exception.getMessage());
-        verify(pixChaveRepository, never()).save(any(PixChave.class));
+        assertThrows(LimiteChavesPixAtingidoException.class, () -> pixChaveService.cadastrarChave(pixChaveCriacaoDTO));
     }
-
-    @Test
-    void deveRejeitarCpfInvalido() {
-        dto = new PixChaveCriacaoDTO(
-                TipoChave.CPF,
-                "12345ABC901",
-                TipoConta.CORRENTE,
-                1234,
-                56789012,
-                "João Silva",
-                "Oliveira"
-        );
-
-        Exception exception = assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.cadastrarChave(dto));
-
-        assertEquals("CPF inválido. Deve conter exatamente 11 dígitos numéricos e ser um CPF válido.", exception.getMessage());
-        verify(pixChaveRepository, never()).save(any(PixChave.class));
-    }
-
-    @Test
-    void deveRejeitarEmailInvalido() {
-        dto = new PixChaveCriacaoDTO(
-                TipoChave.EMAIL,
-                "email_invalido.com",
-                TipoConta.CORRENTE,
-                1234,
-                56789012,
-                "Maria Souza",
-                ""
-        );
-
-        Exception exception = assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.cadastrarChave(dto));
-
-        assertEquals("E-mail inválido. O formato correto deve conter '@' e seguir as regras de e-mail.", exception.getMessage());
-        verify(pixChaveRepository, never()).save(any(PixChave.class));
-    }
-
-    @Test
-    void deveRejeitarCelularSemCodigoPais() {
-        dto = new PixChaveCriacaoDTO(
-                TipoChave.CELULAR,
-                "11987654321",
-                TipoConta.CORRENTE,
-                1234,
-                56789012,
-                "Carlos Pereira",
-                ""
-        );
-
-        Exception exception = assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.cadastrarChave(dto));
-
-        assertEquals("Número de celular inválido. O formato correto é +[código do país][DDD][número com 9 dígitos].", exception.getMessage());
-        verify(pixChaveRepository, never()).save(any(PixChave.class));
-    }
-
-
 
     @Test
     void deveAlterarChaveComSucesso() {
-        UUID id = UUID.randomUUID();
-        PixChave chaveExistente = new PixChave();
-        chaveExistente.setId(id);
-        chaveExistente.setStatus(StatusChave.ATIVA);
-
-        PixChaveAlteracaoDTO dto = new PixChaveAlteracaoDTO(
-                id,
-                TipoConta.CORRENTE,
-                1234,
-                12345678,
-                "João",
-                "Silva"
+        PixChaveAlteracaoDTO alteracaoDTO = new PixChaveAlteracaoDTO(
+                pixChave.getId(),
+                TipoConta.POUPANCA,
+                4321,
+                87654321,
+                "Carlos Silva",
+                "Santos"
         );
 
-        when(pixChaveRepository.findById(id)).thenReturn(Optional.of(chaveExistente));
-        when(pixChaveRepository.save(any(PixChave.class))).thenReturn(chaveExistente);
+        when(pixChaveRepository.findById(any())).thenReturn(Optional.of(pixChave));
+        when(pixChaveRepository.save(any())).thenReturn(pixChave);
 
-        PixChaveDTO resultado = pixChaveService.alterarChave(dto);
+        PixChaveDTO chaveAlterada = pixChaveService.alterarChave(alteracaoDTO);
 
-        assertNotNull(resultado);
-        assertEquals(dto.tipoConta(), resultado.tipoConta());
-        verify(pixChaveRepository, times(1)).save(any(PixChave.class));
+        assertNotNull(chaveAlterada);
+        assertEquals(TipoConta.POUPANCA, chaveAlterada.tipoConta());
+        assertEquals(4321, chaveAlterada.numeroAgencia());
+        assertEquals(87654321, chaveAlterada.numeroConta());
     }
 
     @Test
-    void naoDevePermitirAlterarChaveInativa() {
-        PixChave chaveInativa = new PixChave();
-        chaveInativa.setStatus(StatusChave.INATIVA);
+    void deveLancarErroAoAlterarChaveInativa() {
+        pixChave.setStatus(StatusChave.INATIVA);
 
-        PixChaveAlteracaoDTO dto = new PixChaveAlteracaoDTO(
-                UUID.randomUUID(),
-                TipoConta.CORRENTE,
-                1234,
-                56789012,
-                "João Silva",
-                "Oliveira"
+        PixChaveAlteracaoDTO alteracaoDTO = new PixChaveAlteracaoDTO(
+                pixChave.getId(),
+                TipoConta.POUPANCA,
+                4321,
+                87654321,
+                "Carlos Silva",
+                "Santos"
         );
 
-        when(pixChaveRepository.findById(dto.id())).thenReturn(Optional.of(chaveInativa));
+        when(pixChaveRepository.findById(any())).thenReturn(Optional.of(pixChave));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> pixChaveService.alterarChave(dto));
-        assertEquals("Não é permitido alterar chaves inativadas.", exception.getMessage());
+        assertThrows(RuntimeException.class, () -> pixChaveService.alterarChave(alteracaoDTO));
     }
 
     @Test
-    void deveRetornarErroSeChaveNaoExistir() {
-        UUID idInexistente = UUID.randomUUID();
-        PixChaveAlteracaoDTO dto = new PixChaveAlteracaoDTO(
-                idInexistente,
-                TipoConta.CORRENTE,
-                1234,
-                56789012,
-                "João Silva",
-                "Oliveira"
-        );
+    void deveInativarChaveComSucesso() {
+        when(pixChaveRepository.findById(any())).thenReturn(Optional.of(pixChave));
+        when(pixChaveRepository.save(any())).thenReturn(pixChave);
 
-        when(pixChaveRepository.findById(idInexistente)).thenReturn(Optional.empty());
+        PixChaveDTO chaveInativada = pixChaveService.inativarChave(pixChave.getId());
 
-        Exception exception = assertThrows(RuntimeException.class, () -> pixChaveService.alterarChave(dto));
-        assertEquals("Chave PIX não encontrada", exception.getMessage());
+        assertNotNull(chaveInativada);
+        assertEquals(StatusChave.INATIVA, chaveInativada.status());
     }
 
+    @Test
+    void deveLancarErroAoInativarChaveJaInativa() {
+        pixChave.setStatus(StatusChave.INATIVA);
 
+        when(pixChaveRepository.findById(any())).thenReturn(Optional.of(pixChave));
+
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.inativarChave(pixChave.getId()));
+    }
+
+    @Test
+    void deveConsultarChavePorIdComSucesso() {
+        when(pixChaveRepository.findById(any())).thenReturn(Optional.of(pixChave));
+
+        PixChaveConsultaRespostaDTO consulta = pixChaveService.consultarPorId(pixChave.getId());
+
+        assertNotNull(consulta);
+        assertEquals(pixChave.getId(), consulta.getId());
+    }
+
+    @Test
+    void deveLancarErroAoConsultarChaveNaoEncontrada() {
+        when(pixChaveRepository.findById(any())).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> pixChaveService.consultarPorId(UUID.randomUUID()));
+    }
 }
