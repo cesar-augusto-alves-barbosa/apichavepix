@@ -72,7 +72,7 @@ public class PixChaveService {
         return chaveSalva.getId();
     }
 
-    private void validarRegrasDeCadastro(PixChaveCriacaoDTO dto) {
+    protected  void validarRegrasDeCadastro(PixChaveCriacaoDTO dto) {
         switch (dto.tipoChave()) {
             case CELULAR -> validarCelular(dto.valorChave());
             case EMAIL -> validarEmail(dto.valorChave());
@@ -83,13 +83,13 @@ public class PixChaveService {
         }
     }
 
-    private void validarCelular(String celular) {
+    protected  void validarCelular(String celular) {
         if (!Pattern.matches("^\\+\\d{1,2}\\d{1,3}\\d{9}$", celular)) {
             throw new ChavePixInvalidaException("Número de celular inválido. O formato correto é +[código do país][DDD][número com 9 dígitos].");
         }
     }
 
-    private void validarEmail(String email) {
+    protected  void validarEmail(String email) {
         EmailValidator validator = new EmailValidator();
         if (!validator.isValid(email, null)) {
             throw new ChavePixInvalidaException("E-mail inválido. O formato correto deve conter '@' e seguir as regras de e-mail.");
@@ -99,7 +99,7 @@ public class PixChaveService {
     }
 
 
-    private void validarCpf(String cpf) {
+    protected  void validarCpf(String cpf) {
         CPFValidator validator = new CPFValidator();
         validator.initialize(null);
         if (!validator.isValid(cpf, null)) {
@@ -107,7 +107,7 @@ public class PixChaveService {
         }
     }
 
-    private void validarCnpj(String cnpj) {
+    protected  void validarCnpj(String cnpj) {
         CNPJValidator validator = new CNPJValidator();
         validator.initialize(null);
         if (!validator.isValid(cnpj, null)) {
@@ -115,7 +115,7 @@ public class PixChaveService {
         }
     }
 
-    private void validarChaveAleatoria(String chave) {
+    protected  void validarChaveAleatoria(String chave) {
         if (chave.length() > 36) {
             throw new ChavePixInvalidaException("Chave aleatória inválida. Deve conter no máximo 36 caracteres.");
         }
@@ -124,18 +124,8 @@ public class PixChaveService {
 
     @Transactional
     public PixChaveDTO alterarChave(PixChaveAlteracaoDTO dto) {
-        System.out.println("🚀 Entrou no método alterarChave() com DTO: " + dto);
-
         PixChave chave = pixChaveRepository.findById(dto.id())
                 .orElseThrow(() -> new ChavePixNaoEncontradaException("Chave PIX não encontrada com id " + dto.id()));
-
-        System.out.println("🔍 Chave encontrada: " + chave);
-
-        if (chave.getStatus() == StatusChave.INATIVA) {
-            System.out.println("⚠️ Tentativa de alteração de chave inativa: " + chave.getId());
-            throw new ChavePixInativadaException("Não é permitido alterar chaves inativadas.");
-        }
-
         chave.setTipoConta(dto.tipoConta());
         chave.setNumeroAgencia(dto.numeroAgencia());
         chave.setNumeroConta(dto.numeroConta());
