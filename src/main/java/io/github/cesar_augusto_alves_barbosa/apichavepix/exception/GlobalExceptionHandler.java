@@ -115,9 +115,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponseDTO> handleChavePixInativadaException(ChavePixInativadaException ex) {
         List<Map<String, String>> mensagens = new ArrayList<>();
         Map<String, String> erro = new HashMap<>();
-        System.out.println("🚨 Exceção capturada: " + ex.getMessage());
-        erro.put("mensagem", ex.getMessage());
-        mensagens.add(erro);
 
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(
                 ErroResponseDTO.builder()

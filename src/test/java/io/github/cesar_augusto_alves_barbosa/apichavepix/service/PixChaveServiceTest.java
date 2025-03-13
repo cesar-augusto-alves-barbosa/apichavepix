@@ -149,9 +149,89 @@ class PixChaveServiceTest {
     }
 
     @Test
+    void deveLancarErroAoValidarTipoChaveInvalido() {
+        PixChaveCriacaoDTO dto = new PixChaveCriacaoDTO(
+                null, // Tipo de chave nulo
+                "12345678909",
+                TipoConta.CORRENTE,
+                1234,
+                56789012,
+                "João",
+                "Silva",
+                TipoTitular.PF
+        );
+
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.cadastrarChave(dto));
+    }
+
+
+    @Test
+    void deveLancarErroAoValidarEmailSemArroba() {
+        PixChaveCriacaoDTO dto = new PixChaveCriacaoDTO(TipoChave.EMAIL, "emailinvalido.com", TipoConta.CORRENTE, 1234, 56789012, "João", "Silva", TipoTitular.PF);
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.cadastrarChave(dto));
+    }
+
+    @Test
+    void deveLancarErroAoValidarEmailMuitoLongo() {
+        PixChaveCriacaoDTO dto = new PixChaveCriacaoDTO(
+                TipoChave.EMAIL,
+                "emailmuitolongotestemuitolongoparaserinvalidotestetestetesteteste@emaildemonstracao.com", // Email > 77 caracteres
+                TipoConta.CORRENTE,
+                1234,
+                56789012,
+                "João",
+                "Silva",
+                TipoTitular.PF
+        );
+
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.cadastrarChave(dto));
+    }
+
+
+
+    @Test
+    void deveLancarErroAoConsultarIdNaoExistente() {
+        UUID idInexistente = UUID.randomUUID();
+
+        when(pixChaveRepository.findById(idInexistente)).thenReturn(Optional.empty());
+
+        assertThrows(ChavePixNaoEncontradaException.class, () -> pixChaveService.consultarPorId(idInexistente));
+    }
+
+
+    @Test
+    void deveLancarErroAoInativarChaveNaoEncontrada() {
+        UUID idInexistente = UUID.randomUUID();
+
+        when(pixChaveRepository.findById(idInexistente)).thenReturn(Optional.empty());
+
+        assertThrows(ChavePixNaoEncontradaException.class, () -> pixChaveService.inativarChave(idInexistente));
+    }
+
+    @Test
+    void deveLancarErroAoAlterarChaveNaoEncontrada() {
+        PixChaveAlteracaoDTO dto = new PixChaveAlteracaoDTO(
+                UUID.randomUUID(),
+                TipoConta.CORRENTE,
+                1234,
+                56789012,
+                "João",
+                "Silva");
+
+        when(pixChaveRepository.findById(dto.id())).thenReturn(Optional.empty());
+
+        assertThrows(ChavePixNaoEncontradaException.class, () -> pixChaveService.alterarChave(dto));
+    }
+
+    @Test
     void deveLancarErroAoAlterarChaveNaoExistente() {
         PixChaveAlteracaoDTO dto = new PixChaveAlteracaoDTO(
-                UUID.randomUUID(), TipoConta.CORRENTE, 1234, 56789012, "João", "Silva"
+                UUID.randomUUID(),
+                TipoConta.CORRENTE,
+                1234,
+                56789012,
+                "João",
+                "Silva"
         );
 
         when(pixChaveRepository.findById(dto.id())).thenReturn(Optional.empty());

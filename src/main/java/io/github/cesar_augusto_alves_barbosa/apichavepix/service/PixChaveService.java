@@ -34,7 +34,7 @@ public class PixChaveService {
     public PixChaveConsultaRespostaDTO consultarPorId(UUID id) {
         return pixChaveRepository.findById(id)
                 .map(PixChaveMapper::toConsultaDTO)
-                .orElseThrow(() -> new IllegalArgumentException("Chave PIX não encontrada."));
+                .orElseThrow(() -> new ChavePixNaoEncontradaException("Chave PIX não encontrada."));
     }
 
 
@@ -72,7 +72,11 @@ public class PixChaveService {
         return chaveSalva.getId();
     }
 
-    protected  void validarRegrasDeCadastro(PixChaveCriacaoDTO dto) {
+    protected void validarRegrasDeCadastro(PixChaveCriacaoDTO dto) {
+        if (dto.tipoChave() == null) {
+            throw new ChavePixInvalidaException("O tipo da chave é obrigatório.");
+        }
+
         switch (dto.tipoChave()) {
             case CELULAR -> validarCelular(dto.valorChave());
             case EMAIL -> validarEmail(dto.valorChave());
@@ -82,6 +86,7 @@ public class PixChaveService {
             default -> throw new ChavePixInvalidaException("Tipo de chave inválido.");
         }
     }
+
 
     protected  void validarCelular(String celular) {
         if (!Pattern.matches("^\\+\\d{1,2}\\d{1,3}\\d{9}$", celular)) {
