@@ -102,7 +102,7 @@ class PixChaveServiceTest {
     void deveRejeitarCpfInvalido() {
         dto = new PixChaveCriacaoDTO(
                 TipoChave.CPF,
-                "12345ABC901", // CPF inválido (contém letras)
+                "12345ABC901",
                 TipoConta.CORRENTE,
                 1234,
                 56789012,
@@ -120,7 +120,7 @@ class PixChaveServiceTest {
     void deveRejeitarEmailInvalido() {
         dto = new PixChaveCriacaoDTO(
                 TipoChave.EMAIL,
-                "email_invalido.com", // Falta "@"
+                "email_invalido.com",
                 TipoConta.CORRENTE,
                 1234,
                 56789012,
@@ -138,7 +138,7 @@ class PixChaveServiceTest {
     void deveRejeitarCelularSemCodigoPais() {
         dto = new PixChaveCriacaoDTO(
                 TipoChave.CELULAR,
-                "11987654321", // Falta o código do país (+55)
+                "11987654321",
                 TipoConta.CORRENTE,
                 1234,
                 56789012,

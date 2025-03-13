@@ -4,6 +4,7 @@ import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.*;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.entity.PixChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.StatusChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.TipoChave;
+import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.TipoTitular;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ChavePixInvalidaException;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ChavePixJaCadastradaException;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.ChavePixNaoEncontradaException;
@@ -32,14 +33,14 @@ public class PixChaveService {
     public PixChaveService(PixChaveRepository pixChaveRepository) {
         this.pixChaveRepository = pixChaveRepository;
     }
-    // ✅ Consulta por ID (única chave PIX)
+
     public PixChaveConsultaRespostaDTO consultarPorId(UUID id) {
         return pixChaveRepository.findById(id)
                 .map(PixChaveMapper::toConsultaDTO)
                 .orElseThrow(() -> new IllegalArgumentException("Chave PIX não encontrada."));
     }
 
-    // ✅ Consulta usando múltiplos filtros com Example
+
     public List<PixChaveConsultaRespostaDTO> consultarPorFiltros(PixChaveFiltroDTO filtroDTO) {
         PixChave filtro = PixChaveMapper.toEntity(filtroDTO);
         Example<PixChave> example = Example.of(filtro, ExampleMatcher.matchingAll()
@@ -59,10 +60,10 @@ public class PixChaveService {
             throw new ChavePixJaCadastradaException("Chave PIX já cadastrada para outro correntista.");
         }
 
-        long quantidadeChaves = pixChaveRepository.countByNumeroAgenciaAndNumeroConta(dto.numeroAgencia(), dto.numeroConta());
+        long quantidadeChaves = pixChaveRepository.countByNumeroConta(dto.numeroConta());
 
-        if ((dto.tipoChave() == TipoChave.CPF && quantidadeChaves >= 5) ||
-                (dto.tipoChave() == TipoChave.CNPJ && quantidadeChaves >= 20)) {
+        if ((dto.tipoTitular() == TipoTitular.PF && quantidadeChaves >= 5) ||
+                (dto.tipoTitular() == TipoTitular.PJ && quantidadeChaves >= 20)) {
             throw new LimiteChavesPixAtingidoException("Limite máximo de chaves PIX atingido para essa conta.");
         }
 

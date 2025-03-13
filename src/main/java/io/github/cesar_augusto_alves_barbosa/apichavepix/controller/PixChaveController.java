@@ -34,7 +34,7 @@ public class PixChaveController {
         return ResponseEntity.ok(pixChaveService.consultarPorId(id));
     }
 
-    // ✅ Consulta por múltiplos filtros
+
     @GetMapping
     public ResponseEntity<List<PixChaveConsultaRespostaDTO>> consultarPorFiltros(PixChaveFiltroDTO filtroDTO) {
         List<PixChaveConsultaRespostaDTO> chaves = pixChaveService.consultarPorFiltros(filtroDTO);

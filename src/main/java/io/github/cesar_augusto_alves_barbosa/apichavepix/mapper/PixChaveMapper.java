@@ -38,8 +38,10 @@ public class PixChaveMapper {
                 .sobrenomeCorrentista(dto.sobrenomeCorrentista())
                 .dataCriacao(LocalDateTime.now())
                 .status(StatusChave.ATIVA)
+                .tipoTitular(dto.tipoTitular())
                 .build();
     }
+
 
     public static PixChaveDTO toDTO(PixChave pixChave) {
         return new PixChaveDTO(
