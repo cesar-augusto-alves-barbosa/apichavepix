@@ -3,6 +3,7 @@ package io.github.cesar_augusto_alves_barbosa.apichavepix.entity;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.StatusChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.TipoChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.TipoConta;
+import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.TipoTitular;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -65,8 +66,7 @@ public class PixChave {
     @Enumerated(EnumType.STRING)
     private StatusChave status;
 
-    public void inativarChave() {
-        this.status = StatusChave.INATIVA;
-        this.dataInativacao = LocalDateTime.now();
-    }
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    private TipoTitular tipoTitular;
 }
