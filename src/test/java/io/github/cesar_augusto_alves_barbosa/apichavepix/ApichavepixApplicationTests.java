@@ -8,6 +8,13 @@ class ApichavepixApplicationTests {
 
 	@Test
 	void contextLoads() {
+
+	}
+
+	@Test
+	void mainMethodTest() {
+
+		ApichavepixApplication.main(new String[]{});
 	}
 
 }

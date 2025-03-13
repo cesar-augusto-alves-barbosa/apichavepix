@@ -17,6 +17,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import static org.mockito.Mockito.*;
@@ -103,16 +105,6 @@ class PixChaveControllerTest {
     }
 
     @Test
-    void deveRetornar200QuandoConsultarChavePorIdComSucesso() throws Exception {
-        when(pixChaveService.consultarPorId(chaveId)).thenReturn(respostaDTO);
-
-        mockMvc.perform(get("/api/pix/" + chaveId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(chaveId.toString()))
-                .andExpect(jsonPath("$.tipoChave").value("EMAIL"));
-    }
-
-    @Test
     void deveRetornar200QuandoConsultarChavePorFiltrosComSucesso() throws Exception {
         PixChaveFiltroDTO filtroDTO = new PixChaveFiltroDTO(
                 "EMAIL", null, null, null, null, "João Silva", null
@@ -155,4 +147,57 @@ class PixChaveControllerTest {
                 .andExpect(jsonPath("$.id").value(chaveId.toString()))
                 .andExpect(jsonPath("$.tipoConta").value("POUPANCA"));
     }
+
+    @Test
+    void deveRetornar200QuandoConsultarChavePorIdComSucesso() throws Exception {
+        when(pixChaveService.consultarPorId(chaveId)).thenReturn(respostaDTO);
+
+        mockMvc.perform(get("/api/pix/" + chaveId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(chaveId.toString()))
+                .andExpect(jsonPath("$.tipoChave").value("EMAIL"))
+                .andExpect(jsonPath("$.valorChave").value("teste@email.com"));
+    }
+
+    @Test
+    void deveRetornar404QuandoNaoEncontrarChavesComFiltros() throws Exception {
+        PixChaveFiltroDTO filtroDTO = new PixChaveFiltroDTO(
+                "EMAIL", null, null, null, null, "Carlos", null
+        );
+
+        when(pixChaveService.consultarPorFiltros(any())).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/pix")
+                        .param("tipoChave", "EMAIL")
+                        .param("nomeCorrentista", "Carlos"))
+                .andExpect(status().isNotFound());
+    }
+
+
+
+    @Test
+    void deveRetornar200QuandoInativarChaveComSucesso() throws Exception {
+        PixChaveDTO chaveDTO = new PixChaveDTO(
+                chaveId,
+                TipoChave.EMAIL,
+                "teste@email.com",
+                TipoConta.CORRENTE,
+                1234,
+                56789012,
+                "João Silva",
+                "Oliveira",
+                StatusChave.INATIVA,
+                LocalDateTime.parse("2025-03-10T00:00:00"),
+                null
+        );
+
+        when(pixChaveService.inativarChave(any())).thenReturn(chaveDTO);
+
+        mockMvc.perform(delete("/api/pix/" + chaveId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(chaveId.toString()))
+                .andExpect(jsonPath("$.status").value("INATIVA"));
+    }
+
+
 }

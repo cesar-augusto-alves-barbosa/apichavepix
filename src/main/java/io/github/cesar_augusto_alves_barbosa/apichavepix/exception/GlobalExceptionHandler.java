@@ -39,7 +39,7 @@ public class GlobalExceptionHandler {
 
         if (ex.getRequiredType() == UUID.class) {
             erro.put("campo", ex.getName());
-            erro.put("mensagem", "Formato de UUID inválido. Informe um UUID válido, como '95e4cd5e-7a0c-49a3-8925-2eac961495ef'.");
+            erro.put("mensagem", "Formato de UUID inválido. Informe um UUID válido, como 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'.");
         } else {
             erro.put("campo", ex.getName());
             erro.put("mensagem", "Tipo de dado inválido. Esperado: " + ex.getRequiredType().getSimpleName());

@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Example;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -149,9 +150,15 @@ class PixChaveServiceTest {
     }
 
     @Test
+    void deveLancarErroParaEmailSemArroba() {
+        String emailInvalido = "emailinvalido.com";
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.validarEmail(emailInvalido));
+    }
+
+    @Test
     void deveLancarErroAoValidarTipoChaveInvalido() {
         PixChaveCriacaoDTO dto = new PixChaveCriacaoDTO(
-                null, // Tipo de chave nulo
+                null,
                 "12345678909",
                 TipoConta.CORRENTE,
                 1234,
@@ -175,7 +182,7 @@ class PixChaveServiceTest {
     void deveLancarErroAoValidarEmailMuitoLongo() {
         PixChaveCriacaoDTO dto = new PixChaveCriacaoDTO(
                 TipoChave.EMAIL,
-                "emailmuitolongotestemuitolongoparaserinvalidotestetestetesteteste@emaildemonstracao.com", // Email > 77 caracteres
+                "emailmuitolongotestemuitolongoparaserinvalidotestetestetesteteste@emaildemonstracao.com",
                 TipoConta.CORRENTE,
                 1234,
                 56789012,
@@ -248,4 +255,135 @@ class PixChaveServiceTest {
         assertTrue(pixChaveService.consultarPorFiltros(filtroDTO).isEmpty());
     }
 
+    @Test
+    void deveLancarErroAoConsultarPorFiltrosComCorrespondencias() {
+        PixChaveFiltroDTO filtroDTO = PixChaveFiltroDTO.builder().build();
+        when(pixChaveRepository.findAll(any(Example.class))).thenReturn(List.of(pixChave));
+
+        assertFalse(pixChaveService.consultarPorFiltros(filtroDTO).isEmpty());
+    }
+
+    @Test
+    void deveAlterarChaveComSucesso() {
+        PixChaveAlteracaoDTO dto = new PixChaveAlteracaoDTO(
+                pixChave.getId(),
+                TipoConta.POUPANCA,
+                4321,
+                87654321,
+                "Carlos Silva",
+                "Santos"
+        );
+
+        when(pixChaveRepository.findById(any())).thenReturn(Optional.of(pixChave));
+        when(pixChaveRepository.save(any())).thenReturn(pixChave);
+
+        PixChaveDTO chaveAlterada = pixChaveService.alterarChave(dto);
+
+        assertNotNull(chaveAlterada);
+        assertEquals(TipoConta.POUPANCA, chaveAlterada.tipoConta());
+        assertEquals(4321, chaveAlterada.numeroAgencia());
+        assertEquals(87654321, chaveAlterada.numeroConta());
+    }
+
+    @Test
+    void deveInativarChaveComSucesso() {
+        when(pixChaveRepository.findById(any())).thenReturn(Optional.of(pixChave));
+        when(pixChaveRepository.save(any())).thenReturn(pixChave);
+
+        PixChaveDTO chaveInativada = pixChaveService.inativarChave(pixChave.getId());
+
+        assertNotNull(chaveInativada);
+        assertEquals(StatusChave.INATIVA, chaveInativada.status());
+    }
+
+    @Test
+    void deveLancarErroAoValidarRegrasComTipoChaveNulo() {
+        PixChaveCriacaoDTO dto = new PixChaveCriacaoDTO(null, "12345678909", TipoConta.CORRENTE, 1234, 56789012, "Carlos", "Oliveira", TipoTitular.PF);
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.cadastrarChave(dto));
+    }
+
+    @Test
+    void deveLancarErroAoValidarRegrasComValorChaveNulo() {
+        PixChaveCriacaoDTO dto = new PixChaveCriacaoDTO(TipoChave.CPF, null, TipoConta.CORRENTE, 1234, 56789012, "Carlos", "Oliveira", TipoTitular.PF);
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.cadastrarChave(dto));
+    }
+
+    @Test
+    void deveLancarErroAoValidarRegrasComNumeroAgenciaInvalido() {
+        PixChaveCriacaoDTO dto = new PixChaveCriacaoDTO(TipoChave.CPF, "12345678909", TipoConta.CORRENTE, 12345, 56789012, "Carlos", "Oliveira", TipoTitular.PF);
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.cadastrarChave(dto));
+        verify(pixChaveRepository, never()).save(any());
+    }
+
+    @Test
+    void deveLancarErroAoValidarRegrasComTipoContaNulo() {
+        PixChaveCriacaoDTO dto = new PixChaveCriacaoDTO(TipoChave.CPF, "12345678909", null, 1234, 56789012, "Carlos", "Oliveira", TipoTitular.PF);
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.cadastrarChave(dto));
+        verify(pixChaveRepository, never()).save(any());
+    }
+
+    @Test
+    void deveLancarErroAoValidarRegrasComNumeroContaInvalido() {
+        PixChaveCriacaoDTO dto = new PixChaveCriacaoDTO(
+                TipoChave.CPF,
+                "12345678909",
+                TipoConta.CORRENTE,
+                1234,
+                123456789,
+                "Carlos",
+                "Oliveira",
+                TipoTitular.PF
+        );
+
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.cadastrarChave(dto));
+
+        verify(pixChaveRepository, never()).save(any());
+    }
+
+    @Test
+    void deveLancarErroAoValidarRegrasComTipoChaveInvalido() {
+        PixChaveCriacaoDTO dto = new PixChaveCriacaoDTO(
+                null,
+                "12345678909",
+                TipoConta.CORRENTE,
+                1234,
+                56789012,
+                "Carlos",
+                "Oliveira",
+                TipoTitular.PF
+        );
+
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.cadastrarChave(dto));
+
+        verify(pixChaveRepository, never()).save(any());
+    }
+
+
+    @Test
+    void deveLancarErroAoValidarEmailSemDominio() {
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.validarEmail("email@com"));
+    }
+
+    @Test
+    void deveLancarErroAoValidarEmailMuitoCurto() {
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.validarEmail("e@.c"));
+    }
+
+    @Test
+    void deveLancarErroAoConsultarPorIdNaoEncontrado() {
+        UUID idNaoExistente = UUID.randomUUID();
+        when(pixChaveRepository.findById(idNaoExistente)).thenReturn(Optional.empty());
+
+        assertThrows(ChavePixNaoEncontradaException.class, () -> pixChaveService.consultarPorId(idNaoExistente));
+    }
+
+    @Test
+    void deveLancarErroAoInativarChaveJaInativa() {
+        pixChave.setStatus(StatusChave.INATIVA);
+        when(pixChaveRepository.findById(pixChave.getId())).thenReturn(Optional.of(pixChave));
+
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.inativarChave(pixChave.getId()));
+    }
+
 }
+

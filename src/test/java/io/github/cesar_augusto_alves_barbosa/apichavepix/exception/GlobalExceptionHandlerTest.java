@@ -10,6 +10,8 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -109,4 +111,48 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
     }
+
+    @Test
+    void deveRetornarErroFormatoUUIDInvalido() {
+        MethodArgumentTypeMismatchException ex = mock(MethodArgumentTypeMismatchException.class);
+
+        when(ex.getName()).thenReturn("campoTeste");
+
+        when(ex.getRequiredType()).thenReturn((Class) UUID.class);
+
+        when(ex.getValue()).thenReturn("12345");
+
+        ResponseEntity<ErroResponseDTO> response = handler.handleTypeMismatchException(ex);
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+        assertTrue(response.getBody().getMensagens().get(0).get("mensagem").contains("Formato de UUID inválido"));
+    }
+
+    @Test
+    void deveRetornarErroDeLeituraJsonQuandoBodyFaltando() {
+        HttpMessageNotReadableException ex = new HttpMessageNotReadableException("Required request body is missing");
+        ResponseEntity<ErroResponseDTO> response = handler.handleInvalidParametersException(ex);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertTrue(response.getBody().getMensagens().get(0).get("mensagem").contains("O corpo da requisição (body) é obrigatório"));
+    }
+
+    @Test
+    void deveRetornarErroDeLeituraJsonQuandoFormatoIncorreto() {
+        HttpMessageNotReadableException ex = new HttpMessageNotReadableException("Cannot deserialize value of type");
+        ResponseEntity<ErroResponseDTO> response = handler.handleInvalidParametersException(ex);
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+        assertTrue(response.getBody().getMensagens().get(0).get("mensagem").contains("O formato do JSON enviado está incorreto"));
+    }
+
+    @Test
+    void deveRetornarErroDeLeituraJsonGenerico() {
+        HttpMessageNotReadableException ex = new HttpMessageNotReadableException("Erro ao processar a requisição");
+        ResponseEntity<ErroResponseDTO> response = handler.handleInvalidParametersException(ex);
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+        assertTrue(response.getBody().getMensagens().get(0).get("mensagem").contains("Erro ao processar a requisição"));
+    }
+
 }

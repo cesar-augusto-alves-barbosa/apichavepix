@@ -13,36 +13,40 @@ class PixChaveFiltroDTOTest {
 
     @BeforeEach
     void setUp() {
-        filtro1 = new PixChaveFiltroDTO(
-                "CPF", "12345678901", "CORRENTE",
-                1234, 56789012, "João Silva", "Oliveira"
-        );
+        filtro1 = PixChaveFiltroDTO.builder()
+                .tipoChave("CPF")
+                .valorChave("12345678901")
+                .tipoConta("CORRENTE")
+                .numeroAgencia(1234)
+                .numeroConta(56789012)
+                .nomeCorrentista("João Silva")
+                .sobrenomeCorrentista("Oliveira")
+                .build();
 
-        filtro2 = new PixChaveFiltroDTO(
-                "CPF", "12345678901", "CORRENTE",
-                1234, 56789012, "João Silva", "Oliveira"
-        );
+        filtro2 = PixChaveFiltroDTO.builder()
+                .tipoChave("CPF")
+                .valorChave("12345678901")
+                .tipoConta("CORRENTE")
+                .numeroAgencia(1234)
+                .numeroConta(56789012)
+                .nomeCorrentista("João Silva")
+                .sobrenomeCorrentista("Oliveira")
+                .build();
 
-        filtroDiferente = new PixChaveFiltroDTO(
-                "EMAIL", "email@email.com", "POUPANCA",
-                4321, 87654321, "Carlos Silva", "Santos"
-        );
+        filtroDiferente = PixChaveFiltroDTO.builder()
+                .tipoChave("EMAIL")
+                .valorChave("email@email.com")
+                .tipoConta("POUPANCA")
+                .numeroAgencia(4321)
+                .numeroConta(87654321)
+                .nomeCorrentista("Carlos Silva")
+                .sobrenomeCorrentista("Santos")
+                .build();
     }
 
     @Test
     void deveCriarPixChaveFiltroDTOComSucesso() {
         assertNotNull(filtro1);
-        assertEquals("CPF", filtro1.getTipoChave());
-        assertEquals("12345678901", filtro1.getValorChave());
-        assertEquals("CORRENTE", filtro1.getTipoConta());
-        assertEquals(1234, filtro1.getNumeroAgencia());
-        assertEquals(56789012, filtro1.getNumeroConta());
-        assertEquals("João Silva", filtro1.getNomeCorrentista());
-        assertEquals("Oliveira", filtro1.getSobrenomeCorrentista());
-    }
-
-    @Test
-    void deveRetornarValoresCorretosDosGetters() {
         assertEquals("CPF", filtro1.getTipoChave());
         assertEquals("12345678901", filtro1.getValorChave());
         assertEquals("CORRENTE", filtro1.getTipoConta());
@@ -89,6 +93,23 @@ class PixChaveFiltroDTOTest {
     }
 
     @Test
+    void deveTestarToStringComSucesso() {
+        String resultadoToString = filtro1.toString();
+
+        assertNotNull(resultadoToString);
+        assertTrue(resultadoToString.contains("tipoChave=CPF"));
+        assertTrue(resultadoToString.contains("valorChave=12345678901"));
+        assertTrue(resultadoToString.contains("tipoConta=CORRENTE"));
+        assertTrue(resultadoToString.contains("numeroAgencia=1234"));
+        assertTrue(resultadoToString.contains("numeroConta=56789012"));
+        assertTrue(resultadoToString.contains("nomeCorrentista=João Silva"));
+        assertTrue(resultadoToString.contains("sobrenomeCorrentista=Oliveira"));
+    }
+
+
+
+
+    @Test
     void deveTestarBuilderComSucesso() {
         PixChaveFiltroDTO filtroBuilder = PixChaveFiltroDTO.builder()
                 .tipoChave("CPF")
@@ -108,5 +129,18 @@ class PixChaveFiltroDTOTest {
         assertEquals(56789012, filtroBuilder.getNumeroConta());
         assertEquals("João Silva", filtroBuilder.getNomeCorrentista());
         assertEquals("Oliveira", filtroBuilder.getSobrenomeCorrentista());
+    }
+
+    @Test
+    void deveTestarEqualsComObjetosNulos() {
+        PixChaveFiltroDTO filtroNull = null;
+        assertNotEquals(filtro1, null);
+    }
+
+    @Test
+    void deveTestarEqualsComTipoChaveNulo() {
+        PixChaveFiltroDTO filtroNulo = new PixChaveFiltroDTO(null, "12345678901", "CORRENTE", 1234, 56789012, "Carlos", "Oliveira");
+        assertNotEquals(filtro1, filtroNulo);
+        assertNotEquals(filtro1.hashCode(), filtroNulo.hashCode());
     }
 }

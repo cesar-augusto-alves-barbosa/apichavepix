@@ -1,16 +1,13 @@
 package io.github.cesar_augusto_alves_barbosa.apichavepix.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.UUID;
 
 @Data
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor
+@ToString
 public class PixChaveConsultaRespostaDTO {
 
     private UUID id;
