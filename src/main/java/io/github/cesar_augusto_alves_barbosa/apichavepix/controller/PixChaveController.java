@@ -44,7 +44,7 @@ public class PixChaveController {
     @PostMapping
     public ResponseEntity<PixChaveCriacaoRespostaDTO> cadastrar(@Valid @RequestBody PixChaveCriacaoDTO dto) {
         UUID chaveId = pixChaveService.cadastrarChave(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new PixChaveCriacaoRespostaDTO(chaveId));
+        return ResponseEntity.status(HttpStatus.OK).body(new PixChaveCriacaoRespostaDTO(chaveId));
     }
 
     @PutMapping

@@ -54,14 +54,14 @@ class PixChaveFiltroDTOTest {
 
     @Test
     void deveTestarEqualsComObjetosIguais() {
-        assertEquals(filtro1, filtro2); // Mesmos valores devem ser iguais
-        assertEquals(filtro1.hashCode(), filtro2.hashCode()); // hashCode deve ser igual para objetos equivalentes
+        assertEquals(filtro1, filtro2);
+        assertEquals(filtro1.hashCode(), filtro2.hashCode());
     }
 
     @Test
     void deveTestarEqualsComObjetosDiferentes() {
-        assertNotEquals(filtro1, filtroDiferente); // Objetos diferentes não devem ser iguais
-        assertNotEquals(filtro1.hashCode(), filtroDiferente.hashCode()); // hashCode deve ser diferente
+        assertNotEquals(filtro1, filtroDiferente);
+        assertNotEquals(filtro1.hashCode(), filtroDiferente.hashCode());
     }
 
     @Test
