@@ -36,7 +36,7 @@ public class PixChaveController {
 
 
     @GetMapping
-    public ResponseEntity<List<PixChaveConsultaRespostaDTO>> consultarPorFiltros(PixChaveFiltroDTO filtroDTO) {
+    public ResponseEntity<List<PixChaveConsultaRespostaDTO>> consultarPorFiltros(PixChaveConsultaDTO filtroDTO) {
         List<PixChaveConsultaRespostaDTO> chaves = pixChaveService.consultarPorFiltros(filtroDTO);
         return chaves.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(chaves);
     }

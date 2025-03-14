@@ -12,14 +12,35 @@ import static org.junit.jupiter.api.Assertions.*;
 class ErroResponseDTOTest {
 
     @Test
+    void deveCriarErroResponseDTOComSucesso() {
+        LocalDateTime timestamp = LocalDateTime.now();
+        ErroResponseDTO erroResponseDTO = new ErroResponseDTO(timestamp, HttpStatus.NOT_FOUND.value(),
+                "Chave não encontrada", List.of(Map.of("mensagem", "Chave não encontrada")));
+
+        assertNotNull(erroResponseDTO);
+        assertEquals(HttpStatus.NOT_FOUND.value(), erroResponseDTO.status());
+        assertEquals("Chave não encontrada", erroResponseDTO.erro());
+        assertEquals(List.of(Map.of("mensagem", "Chave não encontrada")), erroResponseDTO.mensagens());
+        assertEquals(timestamp, erroResponseDTO.timestamp());
+    }
+
+    @Test
+    void deveCriarErroResponseDTOComTimestampPadrao() {
+        ErroResponseDTO erroResponseDTO = new ErroResponseDTO(HttpStatus.BAD_REQUEST.value(),
+                "Erro de requisição", List.of(Map.of("mensagem", "Ocorreu um erro")));
+
+        assertNotNull(erroResponseDTO);
+        assertEquals(HttpStatus.BAD_REQUEST.value(), erroResponseDTO.status());
+        assertEquals("Erro de requisição", erroResponseDTO.erro());
+        assertEquals(List.of(Map.of("mensagem", "Ocorreu um erro")), erroResponseDTO.mensagens());
+        assertNotNull(erroResponseDTO.timestamp());
+    }
+
+    @Test
     void deveTestarToStringComSucesso() {
         LocalDateTime timestamp = LocalDateTime.now();
-        ErroResponseDTO erroResponseDTO = ErroResponseDTO.builder()
-                .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                .erro("Erro de requisição")
-                .mensagens(List.of(Map.of("mensagem", "Ocorreu um erro")))
-                .timestamp(timestamp)
-                .build();
+        ErroResponseDTO erroResponseDTO = new ErroResponseDTO(timestamp, HttpStatus.UNPROCESSABLE_ENTITY.value(),
+                "Erro de requisição", List.of(Map.of("mensagem", "Ocorreu um erro")));
 
         String resultadoToString = erroResponseDTO.toString();
 
@@ -27,41 +48,7 @@ class ErroResponseDTOTest {
         assertTrue(resultadoToString.contains("status=" + HttpStatus.UNPROCESSABLE_ENTITY.value()));
         assertTrue(resultadoToString.contains("erro=Erro de requisição"));
         assertTrue(resultadoToString.contains("mensagens=[{mensagem=Ocorreu um erro}]"));
-
         assertTrue(resultadoToString.contains("timestamp="));
         assertTrue(resultadoToString.contains(timestamp.toLocalDate().toString()));
-    }
-
-
-
-    @Test
-    void deveDefinirTimestampComSucesso() {
-        LocalDateTime timestampEsperado = LocalDateTime.of(2025, 3, 10, 10, 0, 0, 0);
-
-        ErroResponseDTO erroResponseDTO = ErroResponseDTO.builder()
-                .status(HttpStatus.BAD_REQUEST.value())
-                .erro("Erro de requisição")
-                .mensagens(List.of(Map.of("mensagem", "Ocorreu um erro")))
-                .timestamp(timestampEsperado)
-                .build();
-
-        assertEquals(timestampEsperado, erroResponseDTO.getTimestamp());
-    }
-
-    @Test
-    void deveCriarErroResponseDTOComSucesso() {
-        LocalDateTime timestamp = LocalDateTime.now();
-        ErroResponseDTO erroResponseDTO = ErroResponseDTO.builder()
-                .status(HttpStatus.NOT_FOUND.value())
-                .erro("Chave não encontrada")
-                .mensagens(List.of(Map.of("mensagem", "Chave não encontrada")))
-                .timestamp(timestamp)
-                .build();
-
-        assertNotNull(erroResponseDTO);
-        assertEquals(HttpStatus.NOT_FOUND.value(), erroResponseDTO.getStatus());
-        assertEquals("Chave não encontrada", erroResponseDTO.getErro());
-        assertEquals(List.of(Map.of("mensagem", "Chave não encontrada")), erroResponseDTO.getMensagens());
-        assertEquals(timestamp, erroResponseDTO.getTimestamp());
     }
 }
