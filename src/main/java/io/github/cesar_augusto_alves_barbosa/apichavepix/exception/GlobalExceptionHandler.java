@@ -106,6 +106,15 @@ public class GlobalExceptionHandler {
                 .body(new ErroResponseDTO(HttpStatus.UNPROCESSABLE_ENTITY.value(), "Chave PIX já cadastrada", List.of(erro)));
     }
 
+    @ExceptionHandler(ChavePixInativadaException.class)
+    public ResponseEntity<ErroResponseDTO> handleChavePixInativadaException(ChavePixInativadaException ex) {
+        Map<String, String> erro = Map.of("mensagem", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ErroResponseDTO(HttpStatus.UNPROCESSABLE_ENTITY.value(), "ChavePixInativada", List.of(erro)));
+    }
+
+
 
     @ExceptionHandler(ChavePixInvalidaException.class)
     public ResponseEntity<ErroResponseDTO> handleChaveInvalida(ChavePixInvalidaException ex) {

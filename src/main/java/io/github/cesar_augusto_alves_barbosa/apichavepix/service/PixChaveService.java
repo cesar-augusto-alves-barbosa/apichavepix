@@ -6,7 +6,7 @@ import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.StatusChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.TipoChave;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.TipoTitular;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.*;
-import io.github.cesar_augusto_alves_barbosa.apichavepix.mapper.PixChaveMapper;
+import io.github.cesar_augusto_alves_barbosa.apichavepix.factory.PixChaveFactory;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.repository.PixChaveRepository;
 import org.hibernate.validator.internal.constraintvalidators.hv.br.CNPJValidator;
 import org.hibernate.validator.internal.constraintvalidators.hv.br.CPFValidator;
@@ -33,13 +33,13 @@ public class PixChaveService {
 
     public PixChaveConsultaRespostaDTO consultarPorId(UUID id) {
         return pixChaveRepository.findById(id)
-                .map(PixChaveMapper::toConsultaDTO)
+                .map(PixChaveFactory::toConsultaDTO)
                 .orElseThrow(() -> new ChavePixNaoEncontradaException("Chave PIX não encontrada."));
     }
 
 
     public List<PixChaveConsultaRespostaDTO> consultarPorFiltros(PixChaveConsultaDTO filtroDTO) {
-        PixChave filtro = PixChaveMapper.toEntity(filtroDTO);
+        PixChave filtro = PixChaveFactory.consultaToEntity(filtroDTO);
         Example<PixChave> example = Example.of(filtro, ExampleMatcher.matchingAll()
                         .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING)
                         .withIgnoreCase()
@@ -47,7 +47,7 @@ public class PixChaveService {
 
         return pixChaveRepository.findAll(example)
                 .stream()
-                .map(PixChaveMapper::toConsultaDTO)
+                .map(PixChaveFactory::toConsultaDTO)
                 .collect(Collectors.toList());
     }
 
@@ -66,7 +66,7 @@ public class PixChaveService {
 
         validarRegrasDeCadastro(dto);
 
-        PixChave novaChave = PixChaveMapper.criarChavePixToEntity(dto);
+        PixChave novaChave = PixChaveFactory.criarChavePixToEntity(dto);
         PixChave chaveSalva = pixChaveRepository.save(novaChave);
 
         return chaveSalva.getId();
@@ -193,7 +193,7 @@ public class PixChaveService {
 
         PixChave chaveSalva = pixChaveRepository.save(chave);
 
-            return PixChaveMapper.toDTO(chaveSalva);
+            return PixChaveFactory.toDTO(chaveSalva);
     }
 
     @Transactional
@@ -209,7 +209,7 @@ public class PixChaveService {
         chave.setDataInativacao(LocalDateTime.now());
 
         PixChave chaveSalva = pixChaveRepository.save(chave);
-        return PixChaveMapper.toDTO(chaveSalva);
+        return PixChaveFactory.toDTO(chaveSalva);
     }
 
 }

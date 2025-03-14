@@ -163,4 +163,177 @@ class PixChaveServiceTest {
 
         assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.inativarChave(pixChave.getId()));
     }
+
+
+    @Test
+    void deveValidarCelularComSucesso() {
+        pixChaveService.validarCelular("+5511998765432");
+    }
+
+    @Test
+    void deveLancarErroParaCelularInvalido() {
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.validarCelular("1198765432"));
+    }
+
+    @Test
+    void deveValidarChaveAleatoriaComSucesso() {
+        pixChaveService.validarChaveAleatoria(UUID.randomUUID().toString());
+    }
+
+    @Test
+    void deveLancarErroParaChaveAleatoriaInvalida() {
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.validarChaveAleatoria("A".repeat(37)));
+    }
+
+    @Test
+    void deveValidarCnpjComSucesso() {
+        pixChaveService.validarCnpj("12345678000195");
+    }
+
+    @Test
+    void deveLancarErroParaCnpjInvalido() {
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.validarCnpj("1234567800019A"));
+    }
+
+    @Test
+    void deveValidarCpfComSucesso() {
+        pixChaveService.validarCpf("12345678909");
+    }
+
+    @Test
+    void deveLancarErroParaCpfInvalido() {
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.validarCpf("12345678A90"));
+    }
+
+    @Test
+    void deveValidarEmailComSucesso() {
+        pixChaveService.validarEmail("teste@email.com");
+    }
+
+    @Test
+    void deveLancarErroParaEmailInvalido() {
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.validarEmail("email_invalido.com"));
+    }
+
+    @Test
+    void deveValidarRegrasDeCadastroComSucesso() {
+        pixChaveService.validarRegrasDeCadastro(pixChaveCriacaoDTO);
+    }
+
+    @Test
+    void deveLancarErroAoValidarRegrasComTipoChaveNulo() {
+        PixChaveCriacaoDTO dto = new PixChaveCriacaoDTO(null, "12345678909", TipoConta.CORRENTE, 1234, 56789012, "Carlos", "Oliveira", TipoTitular.PF);
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.validarRegrasDeCadastro(dto));
+    }
+
+    @Test
+    void deveLancarErroAoValidarRegrasComValorChaveNulo() {
+        PixChaveCriacaoDTO dto = new PixChaveCriacaoDTO(TipoChave.CPF, null, TipoConta.CORRENTE, 1234, 56789012, "Carlos", "Oliveira", TipoTitular.PF);
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.validarRegrasDeCadastro(dto));
+    }
+
+    @Test
+    void deveConsultarPorFiltrosComSucesso() {
+        PixChaveConsultaDTO filtroDTO = new PixChaveConsultaDTO("EMAIL", "teste@email.com", "CORRENTE", 1234, 56789012, "Carlos", "Oliveira");
+        when(pixChaveRepository.findAll(any(Example.class))).thenReturn(List.of(pixChave));
+
+        List<PixChaveConsultaRespostaDTO> resultado = pixChaveService.consultarPorFiltros(filtroDTO);
+
+        assertFalse(resultado.isEmpty());
+        assertEquals(1, resultado.size());
+    }
+
+    @Test
+    void deveRetornarListaVaziaAoConsultarPorFiltrosSemCorrespondencias() {
+        PixChaveConsultaDTO filtroDTO = new PixChaveConsultaDTO("EMAIL", "teste@email.com", "CORRENTE", 1234, 56789012, "Carlos", "Oliveira");
+        when(pixChaveRepository.findAll(any(Example.class))).thenReturn(List.of());
+
+        List<PixChaveConsultaRespostaDTO> resultado = pixChaveService.consultarPorFiltros(filtroDTO);
+
+        assertTrue(resultado.isEmpty());
+    }
+
+    @Test
+    void deveValidarChavePixComSucesso() {
+        assertDoesNotThrow(() -> pixChaveService.validarRegrasDeCadastro(pixChaveCriacaoDTO));
+    }
+
+    @Test
+    void deveLancarErroQuandoTipoChaveForNulo() {
+        pixChaveCriacaoDTO = new PixChaveCriacaoDTO(null, "12345678909", TipoConta.CORRENTE, 1234, 56789012, "Carlos", "Oliveira", TipoTitular.PF);
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.validarRegrasDeCadastro(pixChaveCriacaoDTO));
+    }
+
+    @Test
+    void deveLancarErroQuandoTipoContaForNulo() {
+        pixChaveCriacaoDTO = new PixChaveCriacaoDTO(TipoChave.CPF, "12345678909", null, 1234, 56789012, "Carlos", "Oliveira", TipoTitular.PF);
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.validarRegrasDeCadastro(pixChaveCriacaoDTO));
+    }
+
+    @Test
+    void deveLancarErroQuandoValorChaveForNuloOuVazio() {
+        pixChaveCriacaoDTO = new PixChaveCriacaoDTO(TipoChave.EMAIL, "", TipoConta.CORRENTE, 1234, 56789012, "Carlos", "Oliveira", TipoTitular.PF);
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.validarRegrasDeCadastro(pixChaveCriacaoDTO));
+    }
+
+    @Test
+    void deveLancarErroQuandoNumeroContaForInvalido() {
+        pixChaveCriacaoDTO = new PixChaveCriacaoDTO(TipoChave.EMAIL, "teste@email.com", TipoConta.CORRENTE, 1234, 123456789, "Carlos", "Oliveira", TipoTitular.PF);
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.validarRegrasDeCadastro(pixChaveCriacaoDTO));
+    }
+
+    @Test
+    void deveLancarErroQuandoNumeroAgenciaForInvalido() {
+        pixChaveCriacaoDTO = new PixChaveCriacaoDTO(TipoChave.EMAIL, "teste@email.com", TipoConta.CORRENTE, 12345, 56789012, "Carlos", "Oliveira", TipoTitular.PF);
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.validarRegrasDeCadastro(pixChaveCriacaoDTO));
+    }
+
+    @Test
+    void deveLancarErroQuandoTipoChaveForInvalido() {
+        pixChaveCriacaoDTO = new PixChaveCriacaoDTO(null, "12345678909", TipoConta.CORRENTE, 1234, 56789012, "Carlos", "Oliveira", TipoTitular.PF);
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.validarRegrasDeCadastro(pixChaveCriacaoDTO));
+    }
+
+    @Test
+    void deveChamarValidacaoCorrespondenteAoTipoDeChave() {
+        PixChaveService serviceSpy = spy(pixChaveService);
+
+        pixChaveCriacaoDTO = new PixChaveCriacaoDTO(TipoChave.CELULAR, "+5511998765432", TipoConta.CORRENTE, 1234, 56789012, "Carlos", "Oliveira", TipoTitular.PF);
+        doNothing().when(serviceSpy).validarCelular(any());
+
+        serviceSpy.validarRegrasDeCadastro(pixChaveCriacaoDTO);
+
+        verify(serviceSpy, times(1)).validarCelular(any());
+    }
+
+    @Test
+    void deveLancarErroAoInativarChaveNaoEncontrada() {
+        UUID idNaoExistente = UUID.randomUUID();
+        when(pixChaveRepository.findById(idNaoExistente)).thenReturn(Optional.empty());
+
+        assertThrows(ChavePixNaoEncontradaException.class, () -> pixChaveService.inativarChave(idNaoExistente));
+    }
+
+    @Test
+    void deveLancarErroParaChaveAleatoriaMaiorQue36Caracteres() {
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.validarChaveAleatoria("A".repeat(37)));
+    }
+
+    @Test
+    void deveLancarErroParaChaveAleatoriaComCaracteresInvalidos() {
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.validarChaveAleatoria("chave@errada!"));
+    }
+
+    @Test
+    void deveLancarErroParaEmailMaiorQue77Caracteres() {
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.validarEmail("muito_longo".repeat(10) + "@email.com"));
+    }
+
+    @Test
+    void deveLancarErroAoValidarRegrasComNumeroAgenciaInvalido() {
+        PixChaveCriacaoDTO dto = new PixChaveCriacaoDTO(TipoChave.CPF, "12345678909", TipoConta.CORRENTE, 12345, 56789012, "Carlos", "Oliveira", TipoTitular.PF);
+        assertThrows(ChavePixInvalidaException.class, () -> pixChaveService.validarRegrasDeCadastro(dto));
+        verify(pixChaveRepository, never()).save(any());
+    }
 }
+

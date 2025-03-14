@@ -33,7 +33,7 @@ class ErroResponseDTOTest {
         assertEquals(HttpStatus.BAD_REQUEST.value(), erroResponseDTO.status());
         assertEquals("Erro de requisição", erroResponseDTO.erro());
         assertEquals(List.of(Map.of("mensagem", "Ocorreu um erro")), erroResponseDTO.mensagens());
-        assertNotNull(erroResponseDTO.timestamp()); // timestamp deve ser preenchido automaticamente
+        assertNotNull(erroResponseDTO.timestamp());
     }
 
     @Test

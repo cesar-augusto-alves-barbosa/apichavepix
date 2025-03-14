@@ -1,4 +1,4 @@
-package io.github.cesar_augusto_alves_barbosa.apichavepix.mapper;
+package io.github.cesar_augusto_alves_barbosa.apichavepix.factory;
 
 import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveConsultaRespostaDTO;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.dto.PixChaveCriacaoDTO;
@@ -12,10 +12,10 @@ import io.github.cesar_augusto_alves_barbosa.apichavepix.utils.DateUtils;
 
 import java.time.LocalDateTime;
 
-public class PixChaveMapper {
+public class PixChaveFactory {
 
 
-    public static PixChave toEntity(PixChaveConsultaDTO dto) {
+    public static PixChave consultaToEntity(PixChaveConsultaDTO dto) {
         return PixChave.builder()
                 .tipoChave(dto.tipoChave() != null ? TipoChave.valueOf(dto.tipoChave()) : null)
                 .valorChave(dto.valorChave() != null ? dto.valorChave() : null)

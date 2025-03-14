@@ -7,9 +7,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -62,7 +65,7 @@ class GlobalExceptionHandlerTest {
         com.fasterxml.jackson.databind.JsonMappingException.Reference referenceMock =
                 mock(com.fasterxml.jackson.databind.JsonMappingException.Reference.class);
 
-        when(referenceMock.getFieldName()).thenReturn("campoTeste"); // Nome do campo simulado
+        when(referenceMock.getFieldName()).thenReturn("campoTeste");
         when(ex.getPath()).thenReturn(java.util.List.of(referenceMock));
         when(ex.getValue()).thenReturn("valorIncorreto");
         when(ex.getTargetType()).thenReturn((Class) String.class);
@@ -81,7 +84,7 @@ class GlobalExceptionHandlerTest {
         HttpMessageNotReadableException ex = new HttpMessageNotReadableException("Required request body is missing");
         ResponseEntity<ErroResponseDTO> response = handler.handleInvalidParametersException(ex);
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
         assertTrue(response.getBody().mensagens().get(0).get("mensagem").contains("O corpo da requisição (body) é obrigatório."));
     }
 
@@ -131,7 +134,7 @@ class GlobalExceptionHandlerTest {
         HttpMessageNotReadableException ex = new HttpMessageNotReadableException("Required request body is missing");
         ResponseEntity<ErroResponseDTO> response = handler.handleInvalidParametersException(ex);
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
         assertTrue(response.getBody().mensagens().get(0).get("mensagem").contains("O corpo da requisição (body) é obrigatório"));
     }
 
@@ -142,6 +145,24 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
         assertTrue(response.getBody().mensagens().get(0).get("mensagem").contains("O formato do JSON enviado está incorreto"));
+    }
+
+    @Test
+    void deveRetornarErroDeValidacaoCamposObrigatorios() {
+        BindingResult bindingResult = mock(BindingResult.class);
+        FieldError fieldError = new FieldError("pixChaveCriacaoDTO", "valorChave", "O campo valorChave é obrigatório.");
+
+        when(bindingResult.getFieldErrors()).thenReturn(List.of(fieldError));
+
+        MethodArgumentNotValidException ex = new MethodArgumentNotValidException(null, bindingResult);
+
+        ResponseEntity<ErroResponseDTO> response = handler.handleValidationExceptions(ex);
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertFalse(response.getBody().mensagens().isEmpty());
+        assertEquals("valorChave", response.getBody().mensagens().get(0).get("campo"));
+        assertEquals("O campo valorChave é obrigatório.", response.getBody().mensagens().get(0).get("mensagem"));
     }
 
     @Test
