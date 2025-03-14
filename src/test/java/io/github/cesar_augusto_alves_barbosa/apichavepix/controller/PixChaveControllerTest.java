@@ -106,7 +106,7 @@ class PixChaveControllerTest {
 
     @Test
     void deveRetornar200QuandoConsultarChavePorFiltrosComSucesso() throws Exception {
-        PixChaveFiltroDTO filtroDTO = new PixChaveFiltroDTO(
+        PixChaveConsultaDTO filtroDTO = new PixChaveConsultaDTO(
                 "EMAIL", null, null, null, null, "João Silva", null
         );
 
@@ -161,7 +161,7 @@ class PixChaveControllerTest {
 
     @Test
     void deveRetornar404QuandoNaoEncontrarChavesComFiltros() throws Exception {
-        PixChaveFiltroDTO filtroDTO = new PixChaveFiltroDTO(
+        PixChaveConsultaDTO filtroDTO = new PixChaveConsultaDTO(
                 "EMAIL", null, null, null, null, "Carlos", null
         );
 
