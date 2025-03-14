@@ -18,252 +18,116 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ConsultaInvalidaException.class)
     public ResponseEntity<ErroResponseDTO> handleConsultaInvalida(ConsultaInvalidaException ex) {
-        List<Map<String, String>> mensagens = new ArrayList<>();
-        Map<String, String> erro = new HashMap<>();
-        erro.put("mensagem", ex.getMessage());
-        mensagens.add(erro);
+        Map<String, String> erro = Map.of("mensagem", ex.getMessage());
 
-        ErroResponseDTO response = ErroResponseDTO.builder()
-                .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                .erro("Erro de consulta")
-                .mensagens(mensagens)
-                .build();
-
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ErroResponseDTO(HttpStatus.UNPROCESSABLE_ENTITY.value(), "Erro de consulta", List.of(erro)));
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErroResponseDTO> handleTypeMismatchException(MethodArgumentTypeMismatchException ex) {
-        List<Map<String, String>> mensagens = new ArrayList<>();
         Map<String, String> erro = new HashMap<>();
-
         if (ex.getRequiredType() == UUID.class) {
             erro.put("campo", ex.getName());
-            erro.put("mensagem", "Formato de UUID inválido. Informe um UUID válido, como 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'.");
+            erro.put("mensagem", "Formato de UUID inválido. Informe um UUID válido.");
         } else {
             erro.put("campo", ex.getName());
             erro.put("mensagem", "Tipo de dado inválido. Esperado: " + ex.getRequiredType().getSimpleName());
         }
 
-        mensagens.add(erro);
-
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(
-                ErroResponseDTO.builder()
-                        .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                        .erro("Erro de conversão")
-                        .mensagens(mensagens)
-                        .build()
-        );
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ErroResponseDTO(HttpStatus.UNPROCESSABLE_ENTITY.value(), "Erro de conversão", List.of(erro)));
     }
-
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErroResponseDTO> handleIllegalArgumentException(IllegalArgumentException ex) {
-        List<Map<String, String>> mensagens = new ArrayList<>();
-        Map<String, String> erro = new HashMap<>();
+        Map<String, String> erro = Map.of("mensagem", "Valor inválido informado. Verifique os valores permitidos para este campo.");
 
-        erro.put("mensagem", "Valor inválido informado. Verifique os valores permitidos para este campo.");
-        mensagens.add(erro);
-
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(
-                ErroResponseDTO.builder()
-                        .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                        .erro("Erro de validação")
-                        .mensagens(mensagens)
-                        .build()
-        );
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ErroResponseDTO(HttpStatus.UNPROCESSABLE_ENTITY.value(), "Erro de validação", List.of(erro)));
     }
-
 
     @ExceptionHandler(InvalidFormatException.class)
     public ResponseEntity<ErroResponseDTO> handleInvalidFormatException(InvalidFormatException ex) {
-        List<Map<String, String>> mensagens = new ArrayList<>();
-        Map<String, String> erro = new HashMap<>();
+        Map<String, String> erro = Map.of(
+                "campo", ex.getPath().get(0).getFieldName(),
+                "mensagem", "Valor inválido '" + ex.getValue() +
+                        "'. Os valores permitidos são: " + Arrays.toString(ex.getTargetType().getEnumConstants()));
 
-        erro.put("campo", ex.getPath().get(0).getFieldName());
-        erro.put("mensagem", "Valor inválido '" + ex.getValue() +
-                "'. Os valores permitidos são: " + Arrays.toString(ex.getTargetType().getEnumConstants()));
-        mensagens.add(erro);
-
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(
-                ErroResponseDTO.builder()
-                        .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                        .erro("Erro de validação")
-                        .mensagens(mensagens)
-                        .build()
-        );
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ErroResponseDTO(HttpStatus.UNPROCESSABLE_ENTITY.value(), "Erro de validação", List.of(erro)));
     }
 
     @ExceptionHandler(ChavePixNaoEncontradaException.class)
-    public ResponseEntity<ErroResponseDTO> handleChavePixNaoEncontradaExceptionException(ChavePixNaoEncontradaException ex) {
-        List<Map<String, String>> mensagens = new ArrayList<>();
-        Map<String, String> erro = new HashMap<>();
+    public ResponseEntity<ErroResponseDTO> handleChavePixNaoEncontradaException(ChavePixNaoEncontradaException ex) {
+        Map<String, String> erro = Map.of("mensagem", ex.getMessage());
 
-        erro.put("mensagem", ex.getMessage());
-        mensagens.add(erro);
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                ErroResponseDTO.builder()
-                        .status(HttpStatus.NOT_FOUND.value())
-                        .erro("ChavePixNaoEncontrada")
-                        .mensagens(mensagens)
-                        .build()
-        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErroResponseDTO(HttpStatus.NOT_FOUND.value(), "ChavePixNaoEncontrada", List.of(erro)));
     }
 
-    @ExceptionHandler(ChavePixInativadaException.class)
-    public ResponseEntity<ErroResponseDTO> handleChavePixInativadaException(ChavePixInativadaException ex) {
-        List<Map<String, String>> mensagens = new ArrayList<>();
-        Map<String, String> erro = new HashMap<>();
-
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(
-                ErroResponseDTO.builder()
-                        .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                        .erro("ChavePixInativada")
-                        .mensagens(mensagens)
-                        .build()
-        );
-    }
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErroResponseDTO> handleInvalidParametersException(HttpMessageNotReadableException ex) {
-        List<Map<String, String>> mensagens = new ArrayList<>();
         Map<String, String> erro = new HashMap<>();
-
 
         if (ex.getCause() instanceof InvalidFormatException invalidFormatException) {
             erro.put("campo", invalidFormatException.getPath().get(0).getFieldName());
             erro.put("mensagem", "Valor inválido '" + invalidFormatException.getValue() +
                     "'. Os valores permitidos são: " + Arrays.toString(invalidFormatException.getTargetType().getEnumConstants()));
-            mensagens.add(erro);
-
-            ErroResponseDTO response = ErroResponseDTO.builder()
-                    .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                    .erro("Erro de validação")
-                    .mensagens(mensagens)
-                    .build();
-
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
-        }
-
-
-        if (ex.getMessage().contains("Required request body is missing")) {
+        } else if (ex.getMessage().contains("Required request body is missing")) {
             erro.put("mensagem", "O corpo da requisição (body) é obrigatório.");
-            mensagens.add(erro);
-
-            ErroResponseDTO response = ErroResponseDTO.builder()
-                    .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                    .erro("Erro de leitura do JSON")
-                    .mensagens(mensagens)
-                    .build();
-
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-
-
-        if (ex.getMessage().contains("Cannot deserialize value of type")) {
+        } else if (ex.getMessage().contains("Cannot deserialize value of type")) {
             erro.put("mensagem", "O formato do JSON enviado está incorreto.");
-            mensagens.add(erro);
-
-            ErroResponseDTO response = ErroResponseDTO.builder()
-                    .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                    .erro("Erro de leitura do JSON")
-                    .mensagens(mensagens)
-                    .build();
-
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
+        } else {
+            erro.put("mensagem", "Erro ao processar a requisição.");
         }
 
-        erro.put("mensagem", "Erro ao processar a requisição.");
-        mensagens.add(erro);
-
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(
-                ErroResponseDTO.builder()
-                        .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                        .erro("Erro de leitura do JSON")
-                        .mensagens(mensagens)
-                        .build()
-        );
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ErroResponseDTO(HttpStatus.UNPROCESSABLE_ENTITY.value(), "Erro de leitura do JSON", List.of(erro)));
     }
-
-
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErroResponseDTO> handleValidationExceptions(MethodArgumentNotValidException ex) {
         List<Map<String, String>> mensagens = new ArrayList<>();
 
         for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
-            Map<String, String> erroCampo = new HashMap<>();
-            erroCampo.put("campo", fieldError.getField());
-            erroCampo.put("mensagem", fieldError.getDefaultMessage());
-            mensagens.add(erroCampo);
+            mensagens.add(Map.of("campo", fieldError.getField(), "mensagem", fieldError.getDefaultMessage()));
         }
 
-        ErroResponseDTO erro = ErroResponseDTO.builder()
-                .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                .erro("Erro de validação")
-                .mensagens(mensagens)
-                .build();
-
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(erro);
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ErroResponseDTO(HttpStatus.UNPROCESSABLE_ENTITY.value(), "Erro de validação", mensagens));
     }
 
     @ExceptionHandler(ChavePixJaCadastradaException.class)
     public ResponseEntity<ErroResponseDTO> handleChaveJaCadastrada(ChavePixJaCadastradaException ex) {
-        List<Map<String, String>> mensagens = new ArrayList<>();
-        Map<String, String> erro = new HashMap<>();
-        erro.put("mensagem", ex.getMessage());
-        mensagens.add(erro);
+        Map<String, String> erro = Map.of("mensagem", ex.getMessage());
 
-        ErroResponseDTO response = ErroResponseDTO.builder()
-                .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                .erro("Chave PIX já cadastrada")
-                .mensagens(mensagens)
-                .build();
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ErroResponseDTO(HttpStatus.UNPROCESSABLE_ENTITY.value(), "Chave PIX já cadastrada", List.of(erro)));
     }
+
 
     @ExceptionHandler(ChavePixInvalidaException.class)
     public ResponseEntity<ErroResponseDTO> handleChaveInvalida(ChavePixInvalidaException ex) {
-        List<Map<String, String>> mensagens = new ArrayList<>();
-        Map<String, String> erro = new HashMap<>();
-        erro.put("mensagem", ex.getMessage());
-        mensagens.add(erro);
+        Map<String, String> erro = Map.of("mensagem", ex.getMessage());
 
-        ErroResponseDTO response = ErroResponseDTO.builder()
-                .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                .erro("Chave PIX inválida")
-                .mensagens(mensagens)
-                .build();
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ErroResponseDTO(HttpStatus.UNPROCESSABLE_ENTITY.value(), "Chave PIX inválida", List.of(erro)));
     }
 
     @ExceptionHandler(LimiteChavesPixAtingidoException.class)
     public ResponseEntity<ErroResponseDTO> handleLimiteChavesPixAtingido(LimiteChavesPixAtingidoException ex) {
-        List<Map<String, String>> mensagens = new ArrayList<>();
-        Map<String, String> erro = new HashMap<>();
-        erro.put("mensagem", ex.getMessage());
-        mensagens.add(erro);
+        Map<String, String> erro = Map.of("mensagem", ex.getMessage());
 
-        ErroResponseDTO response = ErroResponseDTO.builder()
-                .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                .erro("Limite de chaves atingido")
-                .mensagens(mensagens)
-                .build();
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ErroResponseDTO(HttpStatus.UNPROCESSABLE_ENTITY.value(), "Limite de chaves atingido", List.of(erro)));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErroResponseDTO> handleGenericException(Exception ex) {
-        List<Map<String, String>> mensagens = new ArrayList<>();
-        Map<String, String> erro = new HashMap<>();
-        erro.put("mensagem", "Erro interno no servidor.");
-        mensagens.add(erro);
+        Map<String, String> erro = Map.of("mensagem", "Erro interno no servidor.");
 
-        ErroResponseDTO response = ErroResponseDTO.builder()
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .erro("Erro interno")
-                .mensagens(mensagens)
-                .build();
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErroResponseDTO(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Erro interno", List.of(erro)));
     }
 }

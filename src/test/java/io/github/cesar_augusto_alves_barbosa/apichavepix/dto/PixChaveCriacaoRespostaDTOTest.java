@@ -26,19 +26,12 @@ class PixChaveCriacaoRespostaDTOTest {
     @Test
     void deveCriarPixChaveCriacaoRespostaDTOComSucesso() {
         assertNotNull(resposta1);
-        assertEquals(chaveId, resposta1.getId());
+        assertEquals(chaveId, resposta1.id());
     }
 
     @Test
     void deveRetornarValorCorretoNoGetter() {
-        assertEquals(chaveId, resposta1.getId());
-    }
-
-    @Test
-    void deveAlterarValorComSetter() {
-        UUID novoId = UUID.randomUUID();
-        resposta1.setId(novoId);
-        assertEquals(novoId, resposta1.getId());
+        assertEquals(chaveId, resposta1.id());
     }
 
     @Test
@@ -56,15 +49,5 @@ class PixChaveCriacaoRespostaDTOTest {
     @Test
     void deveTestarToStringNaoRetornaNulo() {
         assertNotNull(resposta1.toString());
-    }
-
-    @Test
-    void deveTestarCanEqualComObjetosIguais() {
-        assertTrue(resposta1.canEqual(resposta2));
-    }
-
-    @Test
-    void deveTestarCanEqualComObjetosDiferentes() {
-        assertFalse(resposta1.canEqual("String qualquer"));
     }
 }

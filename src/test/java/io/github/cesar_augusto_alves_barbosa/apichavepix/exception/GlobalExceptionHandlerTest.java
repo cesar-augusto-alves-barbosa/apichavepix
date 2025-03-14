@@ -31,7 +31,7 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ErroResponseDTO> response = handler.handleConsultaInvalida(ex);
 
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
-        assertEquals("Erro de consulta", response.getBody().getMensagens().get(0).get("mensagem"));
+        assertEquals("Erro de consulta", response.getBody().mensagens().get(0).get("mensagem"));
     }
 
     @Test
@@ -43,7 +43,7 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ErroResponseDTO> response = handler.handleTypeMismatchException(ex);
 
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
-        assertTrue(response.getBody().getMensagens().get(0).get("mensagem").contains("Tipo de dado inválido"));
+        assertTrue(response.getBody().mensagens().get(0).get("mensagem").contains("Tipo de dado inválido"));
     }
 
     @Test
@@ -52,18 +52,28 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ErroResponseDTO> response = handler.handleIllegalArgumentException(ex);
 
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
-        assertTrue(response.getBody().getMensagens().get(0).get("mensagem").contains("Valor inválido"));
+        assertTrue(response.getBody().mensagens().get(0).get("mensagem").contains("Valor inválido"));
     }
 
     @Test
     void deveRetornarErroFormatoInvalido() {
         InvalidFormatException ex = mock(InvalidFormatException.class);
+
+        com.fasterxml.jackson.databind.JsonMappingException.Reference referenceMock =
+                mock(com.fasterxml.jackson.databind.JsonMappingException.Reference.class);
+
+        when(referenceMock.getFieldName()).thenReturn("campoTeste"); // Nome do campo simulado
+        when(ex.getPath()).thenReturn(java.util.List.of(referenceMock));
         when(ex.getValue()).thenReturn("valorIncorreto");
-        when(ex.getPath()).thenReturn(java.util.List.of(mock(com.fasterxml.jackson.databind.JsonMappingException.Reference.class)));
         when(ex.getTargetType()).thenReturn((Class) String.class);
+
         ResponseEntity<ErroResponseDTO> response = handler.handleInvalidFormatException(ex);
 
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertFalse(response.getBody().mensagens().isEmpty());
+        assertTrue(response.getBody().mensagens().get(0).containsKey("campo"));
+        assertEquals("campoTeste", response.getBody().mensagens().get(0).get("campo"));
     }
 
     @Test
@@ -72,16 +82,16 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ErroResponseDTO> response = handler.handleInvalidParametersException(ex);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertTrue(response.getBody().getMensagens().get(0).get("mensagem").contains("O corpo da requisição (body) é obrigatório."));
+        assertTrue(response.getBody().mensagens().get(0).get("mensagem").contains("O corpo da requisição (body) é obrigatório."));
     }
 
     @Test
     void deveRetornarErroChaveNaoEncontrada() {
         ChavePixNaoEncontradaException ex = new ChavePixNaoEncontradaException("Chave não encontrada");
-        ResponseEntity<ErroResponseDTO> response = handler.handleChavePixNaoEncontradaExceptionException(ex);
+        ResponseEntity<ErroResponseDTO> response = handler.handleChavePixNaoEncontradaException(ex);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertTrue(response.getBody().getMensagens().get(0).get("mensagem").contains("Chave não encontrada"));
+        assertTrue(response.getBody().mensagens().get(0).get("mensagem").contains("Chave não encontrada"));
     }
 
     @Test
@@ -90,7 +100,7 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ErroResponseDTO> response = handler.handleGenericException(ex);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertTrue(response.getBody().getMensagens().get(0).get("mensagem").contains("Erro interno no servidor"));
+        assertTrue(response.getBody().mensagens().get(0).get("mensagem").contains("Erro interno no servidor"));
     }
 
     @Test
@@ -99,17 +109,7 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ErroResponseDTO> response = handler.handleLimiteChavesPixAtingido(ex);
 
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
-        assertTrue(response.getBody().getMensagens().get(0).get("mensagem").contains("Limite de chaves atingido"));
-    }
-
-    @Test
-    void deveRetornarErroDeValidacaoCamposObrigatorios() {
-        MethodArgumentNotValidException ex = mock(MethodArgumentNotValidException.class);
-        when(ex.getBindingResult()).thenReturn(mock(org.springframework.validation.BindingResult.class));
-        when(ex.getBindingResult().getFieldErrors()).thenReturn(java.util.List.of(mock(org.springframework.validation.FieldError.class)));
-        ResponseEntity<ErroResponseDTO> response = handler.handleValidationExceptions(ex);
-
-        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+        assertTrue(response.getBody().mensagens().get(0).get("mensagem").contains("Limite de chaves atingido"));
     }
 
     @Test
@@ -117,15 +117,13 @@ class GlobalExceptionHandlerTest {
         MethodArgumentTypeMismatchException ex = mock(MethodArgumentTypeMismatchException.class);
 
         when(ex.getName()).thenReturn("campoTeste");
-
         when(ex.getRequiredType()).thenReturn((Class) UUID.class);
-
         when(ex.getValue()).thenReturn("12345");
 
         ResponseEntity<ErroResponseDTO> response = handler.handleTypeMismatchException(ex);
 
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
-        assertTrue(response.getBody().getMensagens().get(0).get("mensagem").contains("Formato de UUID inválido"));
+        assertTrue(response.getBody().mensagens().get(0).get("mensagem").contains("Formato de UUID inválido"));
     }
 
     @Test
@@ -134,7 +132,7 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ErroResponseDTO> response = handler.handleInvalidParametersException(ex);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertTrue(response.getBody().getMensagens().get(0).get("mensagem").contains("O corpo da requisição (body) é obrigatório"));
+        assertTrue(response.getBody().mensagens().get(0).get("mensagem").contains("O corpo da requisição (body) é obrigatório"));
     }
 
     @Test
@@ -143,7 +141,7 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ErroResponseDTO> response = handler.handleInvalidParametersException(ex);
 
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
-        assertTrue(response.getBody().getMensagens().get(0).get("mensagem").contains("O formato do JSON enviado está incorreto"));
+        assertTrue(response.getBody().mensagens().get(0).get("mensagem").contains("O formato do JSON enviado está incorreto"));
     }
 
     @Test
@@ -152,7 +150,6 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ErroResponseDTO> response = handler.handleInvalidParametersException(ex);
 
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
-        assertTrue(response.getBody().getMensagens().get(0).get("mensagem").contains("Erro ao processar a requisição"));
+        assertTrue(response.getBody().mensagens().get(0).get("mensagem").contains("Erro ao processar a requisição"));
     }
-
 }

@@ -8,7 +8,6 @@ import io.github.cesar_augusto_alves_barbosa.apichavepix.enums.TipoTitular;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.exception.*;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.mapper.PixChaveMapper;
 import io.github.cesar_augusto_alves_barbosa.apichavepix.repository.PixChaveRepository;
-import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
 import org.hibernate.validator.internal.constraintvalidators.hv.br.CNPJValidator;
 import org.hibernate.validator.internal.constraintvalidators.hv.br.CPFValidator;
 import org.springframework.data.domain.Example;
@@ -39,7 +38,7 @@ public class PixChaveService {
     }
 
 
-    public List<PixChaveConsultaRespostaDTO> consultarPorFiltros(PixChaveFiltroDTO filtroDTO) {
+    public List<PixChaveConsultaRespostaDTO> consultarPorFiltros(PixChaveConsultaDTO filtroDTO) {
         PixChave filtro = PixChaveMapper.toEntity(filtroDTO);
         Example<PixChave> example = Example.of(filtro, ExampleMatcher.matchingAll()
                         .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING)

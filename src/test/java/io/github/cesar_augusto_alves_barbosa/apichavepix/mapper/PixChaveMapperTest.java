@@ -15,7 +15,7 @@ class PixChaveMapperTest {
 
     @Test
     void deveConverterFiltroDTOParaEntity() {
-        PixChaveFiltroDTO filtroDTO = new PixChaveFiltroDTO("EMAIL", "teste@email.com", "CORRENTE", 1234, 56789012, "Carlos", "Oliveira");
+        PixChaveConsultaDTO filtroDTO = new PixChaveConsultaDTO("EMAIL", "teste@email.com", "CORRENTE", 1234, 56789012, "Carlos", "Oliveira");
         PixChave entidade = PixChaveMapper.toEntity(filtroDTO);
 
         assertEquals(TipoChave.EMAIL, entidade.getTipoChave());
@@ -52,9 +52,8 @@ class PixChaveMapperTest {
         PixChave entidade = new PixChave(UUID.randomUUID(), TipoChave.CPF, "12345678909", TipoConta.CORRENTE, 1234, 56789012, "João", "Silva", LocalDateTime.now(), null, StatusChave.ATIVA, TipoTitular.PF);
         PixChaveConsultaRespostaDTO dto = PixChaveMapper.toConsultaDTO(entidade);
 
-        assertEquals(entidade.getId(), dto.getId());
-        assertEquals(entidade.getTipoChave().name(), dto.getTipoChave());
-        assertEquals(entidade.getValorChave(), dto.getValorChave());
+        assertEquals(entidade.getId(), dto.id());
+        assertEquals(entidade.getTipoChave().name(), dto.tipoChave());
+        assertEquals(entidade.getValorChave(), dto.valorChave());
     }
 }
-
